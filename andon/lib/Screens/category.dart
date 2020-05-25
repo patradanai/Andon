@@ -22,8 +22,11 @@ class _CategoryMenuState extends State<CategoryMenu> {
     Color(0xFFEBEEF3),
     Color(0xFFCFDFAC),
     Color(0xFFF1AEAF),
-    Color(0xFFF6E27B)
+    Color(0xFFF6E27B),
+    Color(0xFFF6A27A)
   ];
+
+  Future<List<CategoryModel>> myData;
 
   Future<List<CategoryModel>> fetchAlbum() async {
     final response = await http.get(baseUrl);
@@ -41,7 +44,7 @@ class _CategoryMenuState extends State<CategoryMenu> {
     } else {
       // If the server did not return a 200 OK response,
       // then throw an exception.
-      throw Exception('Failed to load album');
+      throw Exception('Failed to load');
     }
   }
 
@@ -49,6 +52,8 @@ class _CategoryMenuState extends State<CategoryMenu> {
   void initState() {
     // TODO: implement initState
     super.initState();
+
+    myData = fetchAlbum();
   }
 
   @override
@@ -77,7 +82,7 @@ class _CategoryMenuState extends State<CategoryMenu> {
                     maxHeight: height * 0.7,
                   ),
                   child: FutureBuilder(
-                    future: fetchAlbum(),
+                    future: myData,
                     builder: (context, snapshot) {
                       if (snapshot.data == null) {
                         // By default, show a loading spinner.
@@ -118,7 +123,7 @@ Widget gridview(
     // crossAxisSpacing: 10.0,
     shrinkWrap: true,
     crossAxisCount: 2,
-    children: List.generate(6, (index) {
+    children: List.generate(payload.data.length, (index) {
       return CardMenu(
           pressButton: () {
             Navigator.push(

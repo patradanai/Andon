@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:barcode_scan/barcode_scan.dart';
 import 'package:flutter/services.dart';
 import 'package:andon/Widgets/cardProcess.dart';
+import 'package:intl/intl.dart';
 
 class Process extends StatefulWidget {
   static String routeName = 'process';
@@ -15,11 +18,35 @@ class Process extends StatefulWidget {
 
 class _ProcessState extends State<Process> {
   String barcode = "";
+  String _timeString;
+  Timer timer;
 
   @override
-  initState() {
+  void initState() {
     super.initState();
+    // Initial Timer
+    _timeString = _formatDateTime(DateTime.now());
+    timer = Timer.periodic(Duration(seconds: 1), (Timer t) => _getTime());
     print(widget.processName);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    // Dispose Timer
+    timer.cancel();
+  }
+
+  void _getTime() {
+    final DateTime now = DateTime.now();
+    final String formattedDateTime = _formatDateTime(now);
+    setState(() {
+      _timeString = formattedDateTime;
+    });
+  }
+
+  String _formatDateTime(DateTime dateTime) {
+    return DateFormat('hh:mm:ss').format(dateTime);
   }
 
   @override
@@ -65,7 +92,7 @@ class _ProcessState extends State<Process> {
                 },
                 operation: "Takeout wagon as oven",
                 machine: "DLS-201",
-                time: "30 Min",
+                time: "30 min ago",
                 processing: "Processing",
               ),
               CardProcess(
@@ -77,6 +104,7 @@ class _ProcessState extends State<Process> {
                 time: "30 Min",
                 processing: "Processing",
               ),
+              Text(_timeString)
             ],
           ),
         ),
