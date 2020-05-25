@@ -7,7 +7,7 @@ import 'package:andon/Screens/process.dart';
 import 'package:http/http.dart' as http;
 import 'package:andon/Models/categoryModel.dart';
 
-const baseUrl = 'https://163.50.75.55:5000/api/category/';
+const baseUrl = 'http://ab843323.ngrok.io/api/category/';
 
 class CategoryMenu extends StatefulWidget {
   static String routeName = 'category';
@@ -16,15 +16,6 @@ class CategoryMenu extends StatefulWidget {
 }
 
 class _CategoryMenuState extends State<CategoryMenu> {
-  List<String> _processName = [
-    "DLS_FAC3",
-    "DLS_FAC6",
-    "CCM_FAC3",
-    "CCM_FAC6",
-    "SUPPORT NMPM",
-    "TEST"
-  ];
-
   List<Color> _colorful = [
     Color(0xFFF2DDB8),
     Color(0xFFFFC599),
@@ -34,13 +25,19 @@ class _CategoryMenuState extends State<CategoryMenu> {
     Color(0xFFF6E27B)
   ];
 
-  Future<CategoryModel> fetchAlbum() async {
+  Future<List<CategoryModel>> fetchAlbum() async {
     final response = await http.get(baseUrl);
 
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
       // then parse the JSON.
-      return CategoryModel.fromJson(json.decode(response.body));
+      var list = json.decode(response.body);
+      List<CategoryModel> payload = [];
+      for (var i in list) {
+        CategoryModel category = CategoryModel.fromJson(i);
+        payload.add(category);
+      }
+      return payload;
     } else {
       // If the server did not return a 200 OK response,
       // then throw an exception.
@@ -48,14 +45,10 @@ class _CategoryMenuState extends State<CategoryMenu> {
     }
   }
 
-  Future<CategoryModel> futureAlbum;
-
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-
-    futureAlbum = fetchAlbum();
   }
 
   @override
@@ -75,40 +68,26 @@ class _CategoryMenuState extends State<CategoryMenu> {
               ),
             ),
             Positioned(
-              top: height * 0.3,
-              left: 0,
-              right: 0,
-              child: Container(
-                padding: EdgeInsets.only(left: 10, right: 10),
-                constraints: BoxConstraints(
-                  maxHeight: height * 0.7,
-                ),
-                child: GridView.count(
-                  // scrollDirection: Axis.vertical,
-                  childAspectRatio: 1.0,
-                  // crossAxisSpacing: 10.0,
-                  shrinkWrap: true,
-                  crossAxisCount: 2,
-                  children: List.generate(_processName.length, (index) {
-                    return CardMenu(
-                        pressButton: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) {
-                                return Process(
-                                  processName: _processName[index].toString(),
-                                );
-                              },
-                            ),
-                          );
-                        },
-                        label: _processName[index].toString(),
-                        color: _colorful[index]);
-                  }),
-                ),
-              ),
-            )
+                top: height * 0.3,
+                left: 0,
+                right: 0,
+                child: Container(
+                  padding: EdgeInsets.only(left: 10, right: 10),
+                  constraints: BoxConstraints(
+                    maxHeight: height * 0.7,
+                  ),
+                  child: FutureBuilder(
+                    future: fetchAlbum(),
+                    builder: (context, snapshot) {
+                      if (snapshot.data == null) {
+                        // By default, show a loading spinner.
+                        return Center(child: CircularProgressIndicator());
+                      } else {
+                        return gridview(context, snapshot, _colorful);
+                      }
+                    },
+                  ),
+                ))
           ],
         ),
       ),
@@ -129,4 +108,32 @@ class BezierClipper extends CustomClipper<Path> {
 
   @override
   bool shouldReclip(CustomClipper<Path> oldClipper) => true;
+}
+
+Widget gridview(
+    BuildContext context, AsyncSnapshot payload, List<Color> _colorful) {
+  return GridView.count(
+    // scrollDirection: Axis.vertical,
+    childAspectRatio: 1.0,
+    // crossAxisSpacing: 10.0,
+    shrinkWrap: true,
+    crossAxisCount: 2,
+    children: List.generate(6, (index) {
+      return CardMenu(
+          pressButton: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) {
+                  return Process(
+                    processName: payload.data[index].machine.toString(),
+                  );
+                },
+              ),
+            );
+          },
+          label: payload.data[index].machine.toString(),
+          color: _colorful[index]);
+    }),
+  );
 }
