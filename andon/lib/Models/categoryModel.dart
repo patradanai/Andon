@@ -10,3 +10,20 @@ class CategoryModel {
         id: json['id'], machine: json['processName'], zone: json['zoneName']);
   }
 }
+
+class EventProcess {
+  int id;
+  String machine;
+  String operation;
+  String date;
+
+  EventProcess({this.id, this.machine, this.operation, this.date});
+
+  factory EventProcess.fromJson(Map<String, dynamic> json) {
+    return EventProcess(
+        id: json['id'],
+        machine: json['machine'],
+        operation: json['operation'],
+        date: json['timedate']);
+  }
+}

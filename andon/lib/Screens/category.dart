@@ -6,8 +6,9 @@ import 'package:andon/Widgets/cardMenu.dart';
 import 'package:andon/Screens/process.dart';
 import 'package:http/http.dart' as http;
 import 'package:andon/Models/categoryModel.dart';
+import "package:andon/Constants.dart" as con;
 
-const baseUrl = 'http://ab843323.ngrok.io/api/category/';
+const baseUrl = con.baseUrl + '/api/category/';
 
 class CategoryMenu extends StatefulWidget {
   static String routeName = 'category';
@@ -50,7 +51,7 @@ class _CategoryMenuState extends State<CategoryMenu> {
 
   @override
   void initState() {
-    // TODO: implement initState
+    // implement initState
     super.initState();
 
     myData = fetchAlbum();
@@ -131,13 +132,16 @@ Widget gridview(
               MaterialPageRoute(
                 builder: (context) {
                   return Process(
-                    processName: payload.data[index].machine.toString(),
+                    processName: payload.data[index].machine.toString() +
+                        "_" +
+                        payload.data[index].zone.toString(),
                   );
                 },
               ),
             );
           },
           label: payload.data[index].machine.toString(),
+          zone: payload.data[index].zone.toString(),
           color: _colorful[index]);
     }),
   );

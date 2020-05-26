@@ -10,7 +10,7 @@ const dbConfig = {
   },
   server: "172.16.73.146",
   database: "AndonDB",
-  options: { encrypt: false },
+  options: { encrypt: false, enableArithAbort: false },
 };
 
 // Functon Connect SQL SERVER
@@ -29,7 +29,7 @@ const executeQuery = (res, query) => {
           console.log("Error while querying database :- " + err);
           res.send(err);
         } else {
-          res.send(recordset);
+          res.send(recordset.recordset);
         }
       });
     }
@@ -38,7 +38,7 @@ const executeQuery = (res, query) => {
 
 router.get("/", (req, res) => {
   console.log("Fetch GET");
-  const query = "SELECT * from [AndonDB].[dbo].[Andon_Machine]";
+  const query = "SELECT * from [AndonDB].[dbo].[Andon_Category]";
   executeQuery(res, query);
 });
 

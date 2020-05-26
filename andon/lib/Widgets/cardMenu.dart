@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:path/path.dart';
 
 class CardMenu extends StatelessWidget {
   final Function pressButton;
   final String label;
   final Color color;
-  CardMenu({this.pressButton, this.label, this.color});
+  final String zone;
+  CardMenu({this.pressButton, this.label, this.zone, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -29,9 +29,30 @@ class CardMenu extends StatelessWidget {
             ),
           ],
         ),
-        child: Text(
-          label,
-          style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 35,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                zone,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            )
+          ],
         ),
         alignment: Alignment.center,
       ),
