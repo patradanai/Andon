@@ -45,16 +45,19 @@ router.post("/", (req, res) => {
 });
 
 // Update Status
-router.post("/:id", (req, res) => {
-  const data = req.params;
+router.put("/update", (req, res) => {
   const body = req.body;
-  const query = `UPDATE [AndonDB].[dbo].[Andon_Event] SET process = '${body.process}' WHERE id = '${data.id}'`;
+  const query = `UPDATE [AndonDB].[dbo].[Andon_Event] SET process = '${
+    body.process
+  }' WHERE id = ${parseInt(body.id)}`;
   executeQuery(res, query);
 });
 
 // Insert Log
 router.post("/insert", (req, res) => {
   const body = req.body;
+  const query = `INSERT (timedate,machine,operation,operator,elaspedtime,created,done) VALUES('${body.timestart}','${body.machine}','${body.operation}','${body.operator}','${body.elasp}','${body.timecreated}','${body.timedone}') FROM [AndonDB].[dbo].[Andon_log]`;
+  executeQuery(res, query);
 });
 
 module.exports = router;

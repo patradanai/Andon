@@ -24,7 +24,7 @@ class CardProcess extends StatelessWidget {
       splashColor: Colors.black.withAlpha(20),
       onTap: pressButton,
       child: Container(
-          margin: EdgeInsets.only(left: 10, right: 10, bottom: 10),
+          margin: EdgeInsets.only(left: 10, right: 10, bottom: 5, top: 10),
           constraints: BoxConstraints(minHeight: 150),
           decoration: BoxDecoration(
               color: color,

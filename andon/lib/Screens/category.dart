@@ -49,6 +49,33 @@ class _CategoryMenuState extends State<CategoryMenu> {
     }
   }
 
+  Future<List<EventProcess>> fetchProcess() async {
+    final response = await http.post(baseUrl,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(
+          <String, String>{
+            "machine": "",
+          },
+        ),
+        encoding: Encoding.getByName('utf-8'));
+
+    if (response.statusCode == 200) {
+      // If the server did return a 200 OK response,
+      // then parse the JSON.
+      var list = json.decode(response.body);
+      List<EventProcess> payload = [];
+      for (var i in list) {
+        EventProcess eventProcess = EventProcess.fromJson(i);
+        payload.add(eventProcess);
+      }
+      return payload;
+    } else {
+      // If the server did not return a 200 OK response,
+      // then throw an exception.
+      throw Exception('Failed to load');
+    }
+  }
+
   @override
   void initState() {
     // implement initState
@@ -125,24 +152,49 @@ Widget gridview(
     shrinkWrap: true,
     crossAxisCount: 2,
     children: List.generate(payload.data.length, (index) {
-      return CardMenu(
-          pressButton: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) {
-                  return Process(
-                    processName: payload.data[index].machine.toString() +
-                        "_" +
-                        payload.data[index].zone.toString(),
-                  );
-                },
+      return Stack(
+        children: <Widget>[
+          CardMenu(
+            pressButton: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return Process(
+                      processName: payload.data[index].machine.toString() +
+                          "_" +
+                          payload.data[index].zone.toString(),
+                    );
+                  },
+                ),
+              );
+            },
+            label: payload.data[index].machine.toString(),
+            zone: payload.data[index].zone.toString(),
+            color: _colorful[index],
+          ),
+          Positioned(
+            right: 0,
+            child: Container(
+              height: 64,
+              width: 64,
+              decoration: BoxDecoration(
+                color: Color(0xFFEA4633),
+                shape: BoxShape.circle,
               ),
-            );
-          },
-          label: payload.data[index].machine.toString(),
-          zone: payload.data[index].zone.toString(),
-          color: _colorful[index]);
+              child: Text(
+                "1",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 25,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              alignment: Alignment.center,
+            ),
+          )
+        ],
+      );
     }),
   );
 }

@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:andon/Constants.dart' as con;
 import 'package:andon/Models/categoryModel.dart';
+import 'package:andon/Widgets/cardDialog.dart';
 
 const baseUrl = con.baseUrl + '/api/process/';
 
@@ -25,8 +26,8 @@ class _ProcessState extends State<Process> {
   String barcode = "";
   String _timeString;
   Timer timer;
+  bool _stateDialog = true;
   List<DateTime> _timestart = [];
-
   Future<List<EventProcess>> myData;
 
   Future<List<EventProcess>> fetchProcess() async {
@@ -56,9 +57,45 @@ class _ProcessState extends State<Process> {
     }
   }
 
+  Future fetchUpdate(int id, String process) async {
+    final response = await http.put(
+      baseUrl,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(
+        <String, dynamic>{
+          "id": id,
+          "process": process,
+        },
+      ),
+      encoding: Encoding.getByName('utf-8'),
+    );
+
+    if (response.statusCode == 200) {
+    } else {
+      throw Exception('Failed to load');
+    }
+  }
+
+  void _getTime() {
+    final DateTime now = DateTime.now();
+    final String formattedDateTime = _formatDateTime(now);
+    setState(() {
+      _timeString = formattedDateTime;
+    });
+  }
+
+  String _formatDateTime(DateTime dateTime) {
+    return DateFormat('hh:mm:ss').format(dateTime);
+  }
+
+  void _diffTime() {
+    final now = DateTime.now();
+  }
+
   @override
   void initState() {
     super.initState();
+    // Animation
     // Initial Timer
     _timeString = _formatDateTime(DateTime.now());
     // timer = Timer.periodic(Duration(seconds: 1), (Timer t) => _getTime());
@@ -77,22 +114,6 @@ class _ProcessState extends State<Process> {
     super.dispose();
     // Dispose Timer
     timer.cancel();
-  }
-
-  void _getTime() {
-    final DateTime now = DateTime.now();
-    final String formattedDateTime = _formatDateTime(now);
-    setState(() {
-      _timeString = formattedDateTime;
-    });
-  }
-
-  String _formatDateTime(DateTime dateTime) {
-    return DateFormat('hh:mm:ss').format(dateTime);
-  }
-
-  void _diffTime() {
-    final now = DateTime.now();
   }
 
   @override
@@ -114,6 +135,20 @@ class _ProcessState extends State<Process> {
       }
     }
 
+    Future _dialog() async {
+      await showDialog(
+          context: context,
+          builder: (context) {
+            return Center(
+              child: DialogContent(
+                title: "TEST",
+                des: "TESTASD",
+              ),
+            );
+          });
+      print("asdasd");
+    }
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: new AppBar(
@@ -124,11 +159,15 @@ class _ProcessState extends State<Process> {
                 Icons.refresh,
                 size: 30,
               ),
-              onPressed: () {})
+              onPressed: () {
+                setState(() {
+                  myData = fetchProcess();
+                });
+              })
         ],
       ),
       body: Container(
-        margin: EdgeInsets.only(top: 10),
+        color: Colors.grey[300],
         child: FutureBuilder(
           future: myData,
           builder: (context, snapshot) {
@@ -145,7 +184,8 @@ class _ProcessState extends State<Process> {
                   itemBuilder: (context, index) {
                     return CardProcess(
                       pressButton: () {
-                        scan();
+                        // scan();
+                        _dialog();
                       },
                       operation: snapshot.data[index].operation,
                       machine: snapshot.data[index].machine,
@@ -175,6 +215,18 @@ class _ProcessState extends State<Process> {
     );
   }
 }
+// Dialog(
+//     shape: RoundedRectangleBorder(
+//       borderRadius: BorderRadius.circular(16),
+//     ),
+//     elevation: 0.0,
+//     backgroundColor: Colors.transparent,
+//   child: DialogContent(
+//     title: "TEST",
+//     des: "TESTASD",
+//   ),
+// );
+
 // Widget ProcessView(
 //     BuildContext context, AsyncSnapshot snapshot, Function pressButton) {
 //   return ListView.builder(
