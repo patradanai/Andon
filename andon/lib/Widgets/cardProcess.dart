@@ -6,13 +6,16 @@ class CardProcess extends StatelessWidget {
   final String time;
   final String machine;
   final String processing;
+  final Color color;
 
-  CardProcess(
-      {this.pressButton,
-      this.operation,
-      this.machine,
-      this.processing,
-      this.time});
+  CardProcess({
+    this.pressButton,
+    this.operation,
+    this.machine,
+    this.processing,
+    this.time,
+    this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +27,7 @@ class CardProcess extends StatelessWidget {
           margin: EdgeInsets.only(left: 10, right: 10, bottom: 10),
           constraints: BoxConstraints(minHeight: 150),
           decoration: BoxDecoration(
-              color: Colors.white,
+              color: color,
               shape: BoxShape.rectangle,
               borderRadius: BorderRadius.circular(10),
               boxShadow: [

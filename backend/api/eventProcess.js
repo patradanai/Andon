@@ -36,11 +36,25 @@ const executeQuery = (res, query) => {
   });
 };
 
+// Select Machine
 router.post("/", (req, res) => {
   const body = req.body;
-  console.log("Fetch PROCESS");
-  const query = `SELECT * from [AndonDB].[dbo].[Andon_Event] WHERE zoneName = '${body.machine}'`;
+  console.log("Fetch Post");
+  const query = `SELECT * from [AndonDB].[dbo].[Andon_Event] WHERE zoneName = '${body.machine}' AND process != 'End'`;
   executeQuery(res, query);
+});
+
+// Update Status
+router.post("/:id", (req, res) => {
+  const data = req.params;
+  const body = req.body;
+  const query = `UPDATE [AndonDB].[dbo].[Andon_Event] SET process = '${body.process}' WHERE id = '${data.id}'`;
+  executeQuery(res, query);
+});
+
+// Insert Log
+router.post("/insert", (req, res) => {
+  const body = req.body;
 });
 
 module.exports = router;

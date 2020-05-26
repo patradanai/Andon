@@ -25,6 +25,7 @@ class _ProcessState extends State<Process> {
   String barcode = "";
   String _timeString;
   Timer timer;
+  List<DateTime> _timestart = [];
 
   Future<List<EventProcess>> myData;
 
@@ -60,8 +61,13 @@ class _ProcessState extends State<Process> {
     super.initState();
     // Initial Timer
     _timeString = _formatDateTime(DateTime.now());
-    timer = Timer.periodic(Duration(seconds: 1), (Timer t) => _getTime());
-
+    // timer = Timer.periodic(Duration(seconds: 1), (Timer t) => _getTime());
+    timer = Timer.periodic(
+      Duration(seconds: 1),
+      (Timer t) {
+        return _diffTime();
+      },
+    );
     myData = fetchProcess();
     print(widget.processName);
   }
@@ -83,6 +89,10 @@ class _ProcessState extends State<Process> {
 
   String _formatDateTime(DateTime dateTime) {
     return DateFormat('hh:mm:ss').format(dateTime);
+  }
+
+  void _diffTime() {
+    final now = DateTime.now();
   }
 
   @override
@@ -125,20 +135,39 @@ class _ProcessState extends State<Process> {
             if (!snapshot.hasData) {
               return Center(child: CircularProgressIndicator());
             } else {
-              return ListView.builder(
-                itemCount: snapshot.data.length,
-                itemBuilder: (context, index) {
-                  return CardProcess(
-                    pressButton: () {
-                      scan();
-                    },
-                    operation: snapshot.data[index].operation,
-                    machine: snapshot.data[index].machine,
-                    time: "30 min ago",
-                    processing: "Processing",
-                  );
-                },
-              );
+              if (snapshot.data.length > 0) {
+                _timestart.add(
+                  DateTime.parse(snapshot.data[0].date),
+                );
+
+                return ListView.builder(
+                  itemCount: snapshot.data.length,
+                  itemBuilder: (context, index) {
+                    return CardProcess(
+                      pressButton: () {
+                        scan();
+                      },
+                      operation: snapshot.data[index].operation,
+                      machine: snapshot.data[index].machine,
+                      time: "30 Min ago",
+                      processing: snapshot.data[index].process,
+                      color: snapshot.data[index].process == "Wait"
+                          ? Colors.white
+                          : Colors.blue,
+                    );
+                  },
+                );
+              } else {
+                return Center(
+                  child: Text(
+                    "Waiting Queue",
+                    style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                );
+              }
             }
           },
         ),
