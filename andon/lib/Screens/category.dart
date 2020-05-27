@@ -29,6 +29,7 @@ class _CategoryMenuState extends State<CategoryMenu> {
   List<String> zoneName = [];
   Map<String, dynamic> zoneNum = {};
   int countWork = 0;
+  bool stateLoading = false;
   Future<List<CategoryModel>> myData;
   Future<List<EventProcess>> processData;
 
@@ -104,6 +105,10 @@ class _CategoryMenuState extends State<CategoryMenu> {
         }
       },
     );
+
+    setState(() {
+      stateLoading = true;
+    });
   }
 
   @override
@@ -167,7 +172,7 @@ class _CategoryMenuState extends State<CategoryMenu> {
                   child: FutureBuilder(
                     future: myData,
                     builder: (context, snapshot) {
-                      if (snapshot.data == null) {
+                      if (snapshot.data == null || !stateLoading) {
                         // By default, show a loading spinner.
                         return Center(child: CircularProgressIndicator());
                       } else {
@@ -229,7 +234,7 @@ Widget gridview(BuildContext context, AsyncSnapshot payload,
             zone: payload.data[index].zone.toString(),
             color: _colorful[index],
           ),
-          zoneNum[combineZone] > 0
+          zoneNum[combineZone] != 0
               ? Positioned(
                   right: 0,
                   child: Container(

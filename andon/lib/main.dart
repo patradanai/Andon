@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:andon/Screens/category.dart';
 import 'package:andon/Screens/process.dart';
+import 'package:andon/Screens/intro.dart';
 
 void main() {
   runApp(MyApp());
@@ -17,10 +18,10 @@ class MyApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
         backgroundColor: Colors.blueGrey,
       ),
-      initialRoute: CategoryMenu.routeName,
+      initialRoute: Intro.routeName,
       routes: {
+        Intro.routeName: (context) => Intro(),
         CategoryMenu.routeName: (context) => CategoryMenu(),
-        '/category': (context) => CategoryMenu(),
         Process.routeName: (context) => Process()
       },
     );
