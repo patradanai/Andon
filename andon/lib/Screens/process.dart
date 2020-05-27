@@ -24,10 +24,8 @@ class Process extends StatefulWidget {
 
 class _ProcessState extends State<Process> {
   String barcode = "";
-  String _timeString;
   Timer timer;
-  bool _stateDialog = true;
-  List<DateTime> _timestart = [];
+  Map<String, dynamic> _timestart = {};
   Future<List<EventProcess>> myData;
 
   Future<List<EventProcess>> fetchProcess() async {
@@ -76,20 +74,27 @@ class _ProcessState extends State<Process> {
     }
   }
 
-  void _getTime() {
-    final DateTime now = DateTime.now();
-    final String formattedDateTime = _formatDateTime(now);
-    setState(() {
-      _timeString = formattedDateTime;
-    });
-  }
-
-  String _formatDateTime(DateTime dateTime) {
-    return DateFormat('hh:mm:ss').format(dateTime);
-  }
-
+  // Update timestart and datetime.now()
   void _diffTime() {
     final now = DateTime.now();
+    myData.then((value) {
+      for (var i in value) {
+        setState(() {
+          if (now.difference(DateTime.parse(i.date)).inMinutes.abs() >= 60) {
+            _timestart[i.machine] =
+                (now.difference(DateTime.parse(i.date)).inMinutes.abs() / 60)
+                    .round();
+            _timestart[i.machine] =
+                _timestart[i.machine].toString() + " hour ago";
+          } else {
+            _timestart[i.machine] =
+                now.difference(DateTime.parse(i.date)).inMinutes.abs();
+            _timestart[i.machine] =
+                _timestart[i.machine].toString() + " minute ago";
+          }
+        });
+      }
+    });
   }
 
   @override
@@ -97,8 +102,6 @@ class _ProcessState extends State<Process> {
     super.initState();
     // Animation
     // Initial Timer
-    _timeString = _formatDateTime(DateTime.now());
-    // timer = Timer.periodic(Duration(seconds: 1), (Timer t) => _getTime());
     timer = Timer.periodic(
       Duration(seconds: 1),
       (Timer t) {
@@ -106,7 +109,6 @@ class _ProcessState extends State<Process> {
       },
     );
     myData = fetchProcess();
-    print(widget.processName);
   }
 
   @override
@@ -118,10 +120,12 @@ class _ProcessState extends State<Process> {
 
   @override
   Widget build(BuildContext context) {
+    // Future Scan QR Code
     Future scan() async {
       try {
         String barcode = (await BarcodeScanner.scan()) as String;
         setState(() => this.barcode = barcode);
+        print(barcode);
       } on PlatformException catch (e) {
         if (e.code == BarcodeScanner.cameraAccessDenied) {
           // The user did not grant the camera permission.
@@ -135,18 +139,34 @@ class _ProcessState extends State<Process> {
       }
     }
 
-    Future _dialog() async {
+    // Future Dialog EndJob
+    Future _dialogEndJob(Function accept, Function cancel) async {
+      await showDialog(
+        context: context,
+        builder: (context) {
+          return Center(
+            child: DialogContent(
+              title: "ต้องการที่จะปิดงาน?",
+              des: "กด Accept เพื่อที่จะทำการ SCAN QR CODE",
+              accept: accept,
+              cancel: cancel,
+            ),
+          );
+        },
+      );
+    }
+
+    // Future Dialog GetJob
+    Future _dialogGetJob(Function accept, Function cancel) async {
       await showDialog(
           context: context,
           builder: (context) {
             return Center(
               child: DialogContent(
-                title: "ต้องการที่จะปิดงาน?",
+                title: "ต้องการที่จะรับงาน?",
                 des: "กด Accept เพื่อที่จะทำการ SCAN QR CODE",
-                accept: () {},
-                cancel: () {
-                  Navigator.pop(context);
-                },
+                accept: accept,
+                cancel: cancel,
               ),
             );
           });
@@ -178,21 +198,46 @@ class _ProcessState extends State<Process> {
               return Center(child: CircularProgressIndicator());
             } else {
               if (snapshot.data.length > 0) {
-                _timestart.add(
-                  DateTime.parse(snapshot.data[0].date),
-                );
-
                 return ListView.builder(
                   itemCount: snapshot.data.length,
                   itemBuilder: (context, index) {
+                    // Add timestart in Map
+                    // _timestart[snapshot.data[index].machine] =
+                    //     DateTime.parse(snapshot.data[index].date);
                     return CardProcess(
                       pressButton: () {
                         // scan();
-                        _dialog();
+                        if (snapshot.data[index].process == "Processing") {
+                          _dialogEndJob(
+                            () {
+                              Navigator.pop(context);
+                              Future.delayed(Duration(microseconds: 500), () {
+                                scan();
+                              });
+                            },
+                            () {
+                              Navigator.pop(context);
+                            },
+                          );
+                        } else {
+                          _dialogGetJob(
+                            () {
+                              Navigator.pop(context);
+                              Future.delayed(Duration(microseconds: 500), () {
+                                scan();
+                              });
+                            },
+                            () {
+                              Navigator.pop(context);
+                            },
+                          );
+                        }
                       },
                       operation: snapshot.data[index].operation,
                       machine: snapshot.data[index].machine,
-                      time: "30 Min ago",
+                      time: _timestart[snapshot.data[index].machine] != null
+                          ? _timestart[snapshot.data[index].machine].toString()
+                          : "Loading...",
                       processing: snapshot.data[index].process,
                       color: snapshot.data[index].process == "Wait"
                           ? Colors.white

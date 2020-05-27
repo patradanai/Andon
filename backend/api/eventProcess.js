@@ -36,6 +36,13 @@ const executeQuery = (res, query) => {
   });
 };
 
+// Select All Machine except Done
+router.get("/", (req, res) => {
+  console.log("Fetch Get");
+  const query = `SELECT * from [AndonDB].[dbo].[Andon_Event] WHERE process != 'End'`;
+  executeQuery(res, query);
+});
+
 // Select Machine
 router.post("/", (req, res) => {
   const body = req.body;
@@ -56,7 +63,8 @@ router.put("/update", (req, res) => {
 // Insert Log
 router.post("/insert", (req, res) => {
   const body = req.body;
-  const query = `INSERT (timedate,machine,operation,operator,elaspedtime,created,done) VALUES('${body.timestart}','${body.machine}','${body.operation}','${body.operator}','${body.elasp}','${body.timecreated}','${body.timedone}') FROM [AndonDB].[dbo].[Andon_log]`;
+  const query = `INSERT INTO [AndonDB].[dbo].[Andon_log] (timedate,machine,operation,operator,elaspedtime,created,done) VALUES('${body.timestart}','${body.machine}','${body.operation}','${body.operator}','${body.elasp}','${body.timecreated}','${body.timedone}')`;
+  console.log(query);
   executeQuery(res, query);
 });
 
