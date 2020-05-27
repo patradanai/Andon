@@ -58,6 +58,7 @@ class CardProcess extends StatelessWidget {
                       ),
                     ),
                     Container(
+                      alignment: Alignment.topRight,
                       width: 110,
                       child: Text(
                         time,

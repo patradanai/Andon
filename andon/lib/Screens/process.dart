@@ -23,11 +23,14 @@ class Process extends StatefulWidget {
 }
 
 class _ProcessState extends State<Process> {
+  // Variable
   String barcode = "";
   Timer timer;
   Map<String, dynamic> _timestart = {};
   Future<List<EventProcess>> myData;
+  bool _stateQrCode = false;
 
+  // Function
   Future<List<EventProcess>> fetchProcess() async {
     final response = await http.post(baseUrl,
         headers: {'Content-Type': 'application/json'},
@@ -55,7 +58,7 @@ class _ProcessState extends State<Process> {
     }
   }
 
-  Future fetchUpdate(String id, String process) async {
+  Future fetchUpdate(String id, String process, String operatorCode) async {
     final response = await http.put(
       baseUrl + "update",
       headers: {'Content-Type': 'application/json'},
@@ -63,6 +66,33 @@ class _ProcessState extends State<Process> {
         <String, dynamic>{
           "id": id.toString(),
           "process": process.toString(),
+          "operator": operatorCode.toString(),
+          "timecreated": DateTime.now().toString()
+        },
+      ),
+      encoding: Encoding.getByName('utf-8'),
+    );
+
+    if (response.statusCode == 200) {
+    } else {
+      throw Exception('Failed to load');
+    }
+  }
+
+  Future fetchInsert(String timestart, String machine, String operation,
+      String operatorCode, String elasp, String timecreated) async {
+    final response = await http.post(
+      baseUrl + "insert",
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(
+        <String, dynamic>{
+          "timestart": timestart.toString(),
+          "machine": machine.toString(),
+          "operation": operation.toString(),
+          "operator": operatorCode.toString(),
+          "elasp": elasp.toString(),
+          "timecreated": timecreated.toString(),
+          "timedone": DateTime.now().toString()
         },
       ),
       encoding: Encoding.getByName('utf-8'),
@@ -113,14 +143,16 @@ class _ProcessState extends State<Process> {
   void initState() {
     super.initState();
     // Animation
+
+    myData = fetchProcess();
     // Initial Timer
+    _diffTime();
     timer = Timer.periodic(
-      Duration(seconds: 1),
+      Duration(seconds: 60),
       (Timer t) {
         return _diffTime();
       },
     );
-    myData = fetchProcess();
   }
 
   @override
@@ -136,18 +168,28 @@ class _ProcessState extends State<Process> {
     Future scan() async {
       try {
         String barcode = (await BarcodeScanner.scan()) as String;
-        setState(() => this.barcode = barcode);
+        setState(() {
+          this.barcode = barcode;
+          _stateQrCode = true;
+        });
         print(barcode);
       } on PlatformException catch (e) {
         if (e.code == BarcodeScanner.cameraAccessDenied) {
           // The user did not grant the camera permission.
+          setState(() {
+            this.barcode = 'The user did not grant the camera permission!';
+          });
         } else {
           // Unknown error.
+          setState(() => this.barcode = 'Unknown error: $e');
         }
       } on FormatException {
         // User returned using the "back"-button before scanning anything.
+        setState(() => this.barcode =
+            'null (User returned using the "back"-button before scanning anything. Result)');
       } catch (e) {
         // Unknown error.
+        setState(() => this.barcode = 'Unknown error: $e');
       }
     }
 
@@ -222,11 +264,26 @@ class _ProcessState extends State<Process> {
                         // scan();
                         if (snapshot.data[index].process == "Processing") {
                           _dialogEndJob(
-                            () {
+                            () async {
                               Navigator.pop(context);
-                              Future.delayed(Duration(microseconds: 500), () {
-                                scan();
-                              });
+                              await Future.delayed(
+                                  Duration(microseconds: 500), () {});
+                              await scan();
+                              if (_stateQrCode && barcode != "") {
+                                // Insert Data to Database
+                                await fetchInsert(
+                                    snapshot.data[index].date,
+                                    snapshot.data[index].machine,
+                                    snapshot.data[index].operation,
+                                    snapshot.data[index].operatorCode,
+                                    _timestart[snapshot.data[index].machine],
+                                    snapshot.data[index].timecreated);
+                                setState(() {
+                                  // Reset _stateQrCode = false
+                                  _stateQrCode = false;
+                                  barcode = "";
+                                });
+                              }
                             },
                             () {
                               Navigator.pop(context);
@@ -238,10 +295,20 @@ class _ProcessState extends State<Process> {
                               Navigator.pop(context);
                               await Future.delayed(
                                   Duration(microseconds: 500), () {});
+                              // Scan Camera
                               await scan();
-                              await fetchUpdate(
-                                  snapshot.data[index].id.toString(),
-                                  "Processing");
+                              if (_stateQrCode && barcode != "") {
+                                // Update Data to Database
+                                await fetchUpdate(
+                                    snapshot.data[index].id.toString(),
+                                    "Processing",
+                                    barcode);
+                                setState(() {
+                                  // Reset _stateQrCode = false
+                                  _stateQrCode = false;
+                                  barcode = "";
+                                });
+                              }
                             },
                             () {
                               Navigator.pop(context);

@@ -130,7 +130,7 @@ class _CategoryMenuState extends State<CategoryMenu> {
               ),
             ),
             Positioned(
-              top: 50,
+              top: height * 0.1,
               child: Container(
                 margin: EdgeInsets.only(left: 30),
                 child: Column(
@@ -139,7 +139,7 @@ class _CategoryMenuState extends State<CategoryMenu> {
                     Text(
                       "Working Area",
                       style: TextStyle(
-                        fontSize: 40,
+                        fontSize: 45,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -147,7 +147,7 @@ class _CategoryMenuState extends State<CategoryMenu> {
                     Text(
                       "In Quene : " + countWork.toString(),
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: 25,
                         fontWeight: FontWeight.w500,
                       ),
                     )

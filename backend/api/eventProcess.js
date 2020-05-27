@@ -56,6 +56,8 @@ router.put("/update", (req, res) => {
   const body = req.body;
   const query = `UPDATE [AndonDB].[dbo].[Andon_Event] SET process = '${
     body.process
+  }',operator = '${body.operator}',timecreated = '${
+    body.timecreated
   }' WHERE id = ${parseInt(body.id)}`;
   executeQuery(res, query);
 });
