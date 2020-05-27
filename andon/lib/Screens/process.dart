@@ -55,14 +55,14 @@ class _ProcessState extends State<Process> {
     }
   }
 
-  Future fetchUpdate(int id, String process) async {
+  Future fetchUpdate(String id, String process) async {
     final response = await http.put(
-      baseUrl,
+      baseUrl + "update",
       headers: {'Content-Type': 'application/json'},
       body: json.encode(
         <String, dynamic>{
-          "id": id,
-          "process": process,
+          "id": id.toString(),
+          "process": process.toString(),
         },
       ),
       encoding: Encoding.getByName('utf-8'),
@@ -234,11 +234,14 @@ class _ProcessState extends State<Process> {
                           );
                         } else {
                           _dialogGetJob(
-                            () {
+                            () async {
                               Navigator.pop(context);
-                              Future.delayed(Duration(microseconds: 500), () {
-                                scan();
-                              });
+                              await Future.delayed(
+                                  Duration(microseconds: 500), () {});
+                              await scan();
+                              await fetchUpdate(
+                                  snapshot.data[index].id.toString(),
+                                  "Processing");
                             },
                             () {
                               Navigator.pop(context);
