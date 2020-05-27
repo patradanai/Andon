@@ -79,18 +79,30 @@ class _ProcessState extends State<Process> {
     final now = DateTime.now();
     myData.then((value) {
       for (var i in value) {
+        DateTime open = DateTime.parse(i.date);
+        open = DateTime(open.year, open.month, open.day, open.hour, open.minute,
+            open.second);
         setState(() {
-          if (now.difference(DateTime.parse(i.date)).inMinutes.abs() >= 60) {
-            _timestart[i.machine] =
-                (now.difference(DateTime.parse(i.date)).inMinutes.abs() / 60)
-                    .round();
+          if (now.difference(open).inMinutes.abs() >= 60) {
+            _timestart[i.machine] = (now
+                        .difference(
+                          open,
+                        )
+                        .inMinutes
+                        .abs() /
+                    60)
+                .round();
             _timestart[i.machine] =
                 _timestart[i.machine].toString() + " hour ago";
           } else {
+            _timestart[i.machine] = now
+                .difference(
+                  open,
+                )
+                .inMinutes
+                .abs();
             _timestart[i.machine] =
-                now.difference(DateTime.parse(i.date)).inMinutes.abs();
-            _timestart[i.machine] =
-                _timestart[i.machine].toString() + " minute ago";
+                _timestart[i.machine].toString() + " min ago";
           }
         });
       }
@@ -174,7 +186,7 @@ class _ProcessState extends State<Process> {
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: new AppBar(
+      appBar: AppBar(
         title: new Text("Processing : " + widget.processName),
         actions: <Widget>[
           IconButton(
@@ -188,6 +200,7 @@ class _ProcessState extends State<Process> {
                 });
               })
         ],
+        backgroundColor: Color(0xFFA47EF3),
       ),
       body: Container(
         color: Colors.grey[300],
@@ -241,7 +254,7 @@ class _ProcessState extends State<Process> {
                       processing: snapshot.data[index].process,
                       color: snapshot.data[index].process == "Wait"
                           ? Colors.white
-                          : Colors.blue,
+                          : Color(0xFFED638B),
                     );
                   },
                 );

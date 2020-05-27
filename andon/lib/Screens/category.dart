@@ -28,7 +28,7 @@ class _CategoryMenuState extends State<CategoryMenu> {
   ];
   List<String> zoneName = [];
   Map<String, dynamic> zoneNum = {};
-
+  int countWork = 0;
   Future<List<CategoryModel>> myData;
   Future<List<EventProcess>> processData;
 
@@ -75,16 +75,21 @@ class _CategoryMenuState extends State<CategoryMenu> {
   Future countZone() async {
     myData = fetchAlbum();
     processData = fetchProcess();
-    await myData.then(
-      (value) => {
-        for (var i in value)
-          {
-            zoneName.add(i.machine + "_" + i.zone),
-          },
-      },
-    );
+    await myData.then((value) {
+      for (var i in value) {
+        setState(() {
+          // Add ZoneName in Varaible
+          zoneName.add(i.machine + "_" + i.zone);
+        });
+      }
+    });
     await processData.then(
       (value) {
+        setState(() {
+          // Update Count Quene
+          countWork = value.length;
+        });
+
         for (var i in zoneName) {
           int count = 0;
           for (var k in value) {
@@ -92,7 +97,10 @@ class _CategoryMenuState extends State<CategoryMenu> {
               count = count + 1;
             }
           }
-          zoneNum[i] = count;
+          setState(() {
+            // Update Map ZoneNum
+            zoneNum[i] = count;
+          });
         }
       },
     );
@@ -118,7 +126,33 @@ class _CategoryMenuState extends State<CategoryMenu> {
               clipper: BezierClipper(),
               child: Container(
                 height: height * 0.3,
-                color: Color.fromRGBO(255, 91, 53, 1),
+                color: Color(0xFFA47EF3),
+              ),
+            ),
+            Positioned(
+              top: 50,
+              child: Container(
+                margin: EdgeInsets.only(left: 30),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      "Working Area",
+                      style: TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      "In Quene : " + countWork.toString(),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    )
+                  ],
+                ),
               ),
             ),
             Positioned(
