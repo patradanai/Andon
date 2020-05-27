@@ -17,22 +17,23 @@ class EventProcess {
   String operation;
   String date;
   String process;
+  String zone;
 
-  EventProcess({
-    this.id,
-    this.machine,
-    this.operation,
-    this.date,
-    this.process,
-  });
+  EventProcess(
+      {this.id,
+      this.machine,
+      this.operation,
+      this.date,
+      this.process,
+      this.zone});
 
   factory EventProcess.fromJson(Map<String, dynamic> json) {
     return EventProcess(
-      id: json['id'],
-      machine: json['machine'],
-      operation: json['operation'],
-      date: json['timedate'],
-      process: json['process'],
-    );
+        id: json['id'],
+        machine: json['machine'],
+        operation: json['operation'],
+        date: json['timedate'],
+        process: json['process'],
+        zone: json['zoneName']);
   }
 }

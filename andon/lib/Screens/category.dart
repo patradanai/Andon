@@ -26,8 +26,11 @@ class _CategoryMenuState extends State<CategoryMenu> {
     Color(0xFFF6E27B),
     Color(0xFFF6A27A)
   ];
+  List<String> zoneName = [];
+  Map<String, dynamic> zoneNum = {};
 
   Future<List<CategoryModel>> myData;
+  Future<List<EventProcess>> processData;
 
   Future<List<CategoryModel>> fetchAlbum() async {
     final response = await http.get(baseUrl);
@@ -50,14 +53,7 @@ class _CategoryMenuState extends State<CategoryMenu> {
   }
 
   Future<List<EventProcess>> fetchProcess() async {
-    final response = await http.post(baseUrl,
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(
-          <String, String>{
-            "machine": "",
-          },
-        ),
-        encoding: Encoding.getByName('utf-8'));
+    final response = await http.get(con.baseUrl + "/api/process/");
 
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
@@ -76,12 +72,37 @@ class _CategoryMenuState extends State<CategoryMenu> {
     }
   }
 
+  Future countZone() async {
+    myData = fetchAlbum();
+    processData = fetchProcess();
+    await myData.then(
+      (value) => {
+        for (var i in value)
+          {
+            zoneName.add(i.machine + "_" + i.zone),
+          },
+      },
+    );
+    await processData.then(
+      (value) {
+        for (var i in zoneName) {
+          int count = 0;
+          for (var k in value) {
+            if (k.zone == i) {
+              count = count + 1;
+            }
+          }
+          zoneNum[i] = count;
+        }
+      },
+    );
+  }
+
   @override
   void initState() {
     // implement initState
     super.initState();
-
-    myData = fetchAlbum();
+    countZone();
   }
 
   @override
@@ -116,7 +137,7 @@ class _CategoryMenuState extends State<CategoryMenu> {
                         // By default, show a loading spinner.
                         return Center(child: CircularProgressIndicator());
                       } else {
-                        return gridview(context, snapshot, _colorful);
+                        return gridview(context, snapshot, _colorful, zoneNum);
                       }
                     },
                   ),
@@ -143,8 +164,8 @@ class BezierClipper extends CustomClipper<Path> {
   bool shouldReclip(CustomClipper<Path> oldClipper) => true;
 }
 
-Widget gridview(
-    BuildContext context, AsyncSnapshot payload, List<Color> _colorful) {
+Widget gridview(BuildContext context, AsyncSnapshot payload,
+    List<Color> _colorful, Map zoneNum) {
   return GridView.count(
     // scrollDirection: Axis.vertical,
     childAspectRatio: 1.0,
@@ -152,6 +173,9 @@ Widget gridview(
     shrinkWrap: true,
     crossAxisCount: 2,
     children: List.generate(payload.data.length, (index) {
+      var combineZone = payload.data[index].machine.toString() +
+          "_" +
+          payload.data[index].zone.toString();
       return Stack(
         children: <Widget>[
           CardMenu(
@@ -161,9 +185,7 @@ Widget gridview(
                 MaterialPageRoute(
                   builder: (context) {
                     return Process(
-                      processName: payload.data[index].machine.toString() +
-                          "_" +
-                          payload.data[index].zone.toString(),
+                      processName: combineZone,
                     );
                   },
                 ),
@@ -173,27 +195,32 @@ Widget gridview(
             zone: payload.data[index].zone.toString(),
             color: _colorful[index],
           ),
-          Positioned(
-            right: 0,
-            child: Container(
-              height: 64,
-              width: 64,
-              decoration: BoxDecoration(
-                color: Color(0xFFEA4633),
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                "1",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 25,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              alignment: Alignment.center,
-            ),
-          )
-        ],
+          zoneNum[combineZone] > 0
+              ? Positioned(
+                  right: 0,
+                  child: Container(
+                    height: 64,
+                    width: 64,
+                    decoration: BoxDecoration(
+                      color: Color(0xFFEA4633),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      zoneNum[payload.data[index].machine.toString() +
+                              "_" +
+                              payload.data[index].zone.toString()]
+                          .toString(),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 25,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                  ),
+                )
+              : null
+        ].where((child) => child != null).toList(),
       );
     }),
   );
