@@ -141,12 +141,15 @@ class _ProcessState extends State<Process> {
           builder: (context) {
             return Center(
               child: DialogContent(
-                title: "TEST",
-                des: "TESTASD",
+                title: "ต้องการที่จะปิดงาน?",
+                des: "กด Accept เพื่อที่จะทำการ SCAN QR CODE",
+                accept: () {},
+                cancel: () {
+                  Navigator.pop(context);
+                },
               ),
             );
           });
-      print("asdasd");
     }
 
     return Scaffold(
