@@ -1,10 +1,12 @@
 import 'package:andon/Stores/action.dart';
 import 'package:andon/Models/categoryModel.dart';
 
-categoryReducer(state, dynamic action) {
-  if (action == "UPDATECATEGORY") {
-    state.counter++;
-    return state;
+categoryReducer(state, action) {
+  switch (action.type) {
+    case "CategoryAPI":
+      state.category = action.message;
+      return state;
+    default:
+      return state;
   }
-  return state;
 }

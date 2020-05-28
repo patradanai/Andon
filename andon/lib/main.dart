@@ -7,23 +7,35 @@ import 'package:andon/Screens/process.dart';
 import 'package:andon/Screens/intro.dart';
 import 'package:flutter_simple_dependency_injection/injector.dart';
 import 'package:andon/Services/socketService.dart';
+// State Management
 import 'package:andon/Stores/action.dart';
 import 'package:andon/Stores/reducers.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 import 'package:redux/redux.dart';
+import 'package:redux_thunk/redux_thunk.dart';
+import 'package:redux_logging/redux_logging.dart';
+
+class InitialState {
+  dynamic category;
+  InitialState({this.category});
+}
 
 Injector injector;
 void main() async {
   final Store store = Store(
     categoryReducer,
-    initialState: CategoryAction(counter: 0),
+    initialState: InitialState(),
+    middleware: [
+      thunkMiddleware,
+      LoggingMiddleware.printer(),
+    ],
   );
   // Injector
   DependencyInjection().initialise(Injector.getInjector());
   injector = Injector.getInjector();
   await AppInitializer().initialise(injector);
   final SocketService socketService = injector.get<SocketService>();
-  // socketService.createSocketConnection();
+  socketService.createSocketConnection();
   runApp(FlutterReduxApp(store));
 }
 

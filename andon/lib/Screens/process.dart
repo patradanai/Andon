@@ -48,7 +48,9 @@ class _ProcessState extends State<Process> {
       List<EventProcess> payload = [];
       for (var i in list) {
         EventProcess eventProcess = EventProcess.fromJson(i);
-        payload.add(eventProcess);
+        if (eventProcess.process != "Done") {
+          payload.add(eventProcess);
+        }
       }
       return payload;
     } else {
@@ -301,7 +303,7 @@ class _ProcessState extends State<Process> {
                               Navigator.pop(context);
                             },
                           );
-                        } else {
+                        } else if (snapshot.data[index].process == "Wait") {
                           _dialogGetJob(
                             () async {
                               Navigator.pop(context);

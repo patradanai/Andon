@@ -1,16 +1,12 @@
-import 'dart:convert';
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:andon/Widgets/cardMenu.dart';
 import 'package:andon/Screens/process.dart';
-import 'package:http/http.dart' as http;
 import 'package:andon/Models/categoryModel.dart';
-import 'package:andon/Constants.dart' as con;
 import 'package:flutter_redux/flutter_redux.dart';
-import 'package:andon/Stores/stateModel.dart';
-
-const baseUrl = con.baseUrl + '/api/category/';
+import 'package:andon/Stores/viewModel.dart';
+import 'package:andon/Services/apiClient.dart';
+import 'package:andon/Stores/action.dart';
 
 class CategoryMenu extends StatefulWidget {
   static String routeName = 'category';
@@ -36,49 +32,9 @@ class _CategoryMenuState extends State<CategoryMenu> {
   Future<List<CategoryModel>> myData;
   Future<List<EventProcess>> processData;
 
-  Future<List<CategoryModel>> fetchAlbum() async {
-    final response = await http.get(baseUrl);
-
-    if (response.statusCode == 200) {
-      // If the server did return a 200 OK response,
-      // then parse the JSON.
-      var list = json.decode(response.body);
-      List<CategoryModel> payload = [];
-      for (var i in list) {
-        CategoryModel category = CategoryModel.fromJson(i);
-        payload.add(category);
-      }
-      return payload;
-    } else {
-      // If the server did not return a 200 OK response,
-      // then throw an exception.
-      throw Exception('Failed to load');
-    }
-  }
-
-  Future<List<EventProcess>> fetchProcess() async {
-    final response = await http.get(con.baseUrl + "/api/process/");
-
-    if (response.statusCode == 200) {
-      // If the server did return a 200 OK response,
-      // then parse the JSON.
-      var list = json.decode(response.body);
-      List<EventProcess> payload = [];
-      for (var i in list) {
-        EventProcess eventProcess = EventProcess.fromJson(i);
-        payload.add(eventProcess);
-      }
-      return payload;
-    } else {
-      // If the server did not return a 200 OK response,
-      // then throw an exception.
-      throw Exception('Failed to load');
-    }
-  }
-
   Future countZone() async {
-    myData = fetchAlbum();
-    processData = fetchProcess();
+    myData = ApiClient.fetchAlbum();
+    processData = ApiClient.fetchProcess();
     await myData.then((value) {
       for (var i in value) {
         setState(() {
@@ -125,68 +81,81 @@ class _CategoryMenuState extends State<CategoryMenu> {
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
 
-    return Scaffold(
-      body: Container(
-        height: height,
-        child: Stack(
-          children: <Widget>[
-            ClipPath(
-              clipper: BezierClipper(),
-              child: Container(
-                height: height * 0.3,
-                color: Color(0xFFA47EF3),
-              ),
-            ),
-            Positioned(
-              top: height * 0.1,
-              child: Container(
-                margin: EdgeInsets.only(left: 30),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      "Working Area",
-                      style: TextStyle(
-                        fontSize: 45,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      "In Quene : " + countWork.toString(),
-                      style: TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    )
-                  ],
+    return StoreConnector(
+      converter: (store) {
+        return CategoryView(
+          state: store.state,
+          getCategory: () => store.dispatch(
+            getEvent(),
+          ),
+        );
+      },
+      builder: (context, CategoryView model) {
+        return Scaffold(
+          body: Container(
+            height: height,
+            child: Stack(
+              children: <Widget>[
+                ClipPath(
+                  clipper: BezierClipper(),
+                  child: Container(
+                    height: height * 0.3,
+                    color: Color(0xFFA47EF3),
+                  ),
                 ),
-              ),
+                Positioned(
+                  top: height * 0.1,
+                  child: Container(
+                    margin: EdgeInsets.only(left: 30),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          "Working Area",
+                          style: TextStyle(
+                            fontSize: 45,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          "In Quene : " + countWork.toString(),
+                          style: TextStyle(
+                            fontSize: 25,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                    top: height * 0.3,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      padding: EdgeInsets.only(left: 10, right: 10),
+                      constraints: BoxConstraints(
+                        maxHeight: height * 0.7,
+                      ),
+                      child: FutureBuilder(
+                        future: myData,
+                        builder: (context, snapshot) {
+                          if (snapshot.data == null || !stateLoading) {
+                            // By default, show a loading spinner.
+                            return Center(child: CircularProgressIndicator());
+                          } else {
+                            return gridview(
+                                context, snapshot, _colorful, zoneNum);
+                          }
+                        },
+                      ),
+                    ))
+              ],
             ),
-            Positioned(
-                top: height * 0.3,
-                left: 0,
-                right: 0,
-                child: Container(
-                  padding: EdgeInsets.only(left: 10, right: 10),
-                  constraints: BoxConstraints(
-                    maxHeight: height * 0.7,
-                  ),
-                  child: FutureBuilder(
-                    future: myData,
-                    builder: (context, snapshot) {
-                      if (snapshot.data == null || !stateLoading) {
-                        // By default, show a loading spinner.
-                        return Center(child: CircularProgressIndicator());
-                      } else {
-                        return gridview(context, snapshot, _colorful, zoneNum);
-                      }
-                    },
-                  ),
-                ))
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

@@ -39,7 +39,8 @@ dependencies:
   flutter_simple_dependency_injection: ^1.0.2+1
   flutter_redux: ^0.6.0
   redux: ^4.0.0
-  redux_dev_tools: ^0.5.2
+  redux_thunk: ^0.3.0
+  redux_logging: ^0.4.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
