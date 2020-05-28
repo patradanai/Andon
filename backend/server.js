@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const sockerIO = require("socket.io");
+const socketIO = require("socket.io");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
@@ -25,6 +25,22 @@ const eventProcess = require("./api/eventProcess");
 
 app.use("/api/process", eventProcess);
 
-app.listen(Port, () => {
+server = app.listen(Port, () => {
   console.log(`BACKEND ON PORT ${Port}`);
+});
+
+// Socket io
+const io = socketIO.listen(server);
+
+io.on("connection", (client) => {
+  console.log("User Connected");
+
+  client.on("disconnect", () => {
+    console.log("DisConnected");
+  });
+
+  setInterval(() => {
+    console.log("sending");
+    client.emit("data", { data: 1 });
+  }, 2000);
 });

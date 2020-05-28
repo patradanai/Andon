@@ -6,12 +6,15 @@ import 'package:andon/Widgets/cardMenu.dart';
 import 'package:andon/Screens/process.dart';
 import 'package:http/http.dart' as http;
 import 'package:andon/Models/categoryModel.dart';
-import "package:andon/Constants.dart" as con;
+import 'package:andon/Constants.dart' as con;
+import 'package:flutter_redux/flutter_redux.dart';
+import 'package:andon/Stores/stateModel.dart';
 
 const baseUrl = con.baseUrl + '/api/category/';
 
 class CategoryMenu extends StatefulWidget {
   static String routeName = 'category';
+
   @override
   _CategoryMenuState createState() => _CategoryMenuState();
 }
@@ -258,7 +261,18 @@ Widget gridview(BuildContext context, AsyncSnapshot payload,
                     alignment: Alignment.center,
                   ),
                 )
-              : null
+              : null,
+          // StoreConnector<dynamic, StateModel>(
+          //   converter: (store) {
+          //     return StateModel(
+          //       state: store.state,
+          //       onUpdateState: store.dispatch("UPDATECATEGORY"),
+          //     );
+          //   },
+          //   builder: (context, model) {
+          //     return Text(model.state.counter.toString());
+          //   },
+          // )
         ].where((child) => child != null).toList(),
       );
     }),

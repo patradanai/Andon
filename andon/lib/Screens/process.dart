@@ -67,13 +67,16 @@ class _ProcessState extends State<Process> {
           "id": id.toString(),
           "process": process.toString(),
           "operator": operatorCode.toString(),
-          "timecreated": DateTime.now().toString()
+          "timecreated": DateFormat.yMd().add_jm().format(
+                DateTime.now(),
+              )
         },
       ),
       encoding: Encoding.getByName('utf-8'),
     );
 
     if (response.statusCode == 200) {
+      print("Completed Update");
     } else {
       throw Exception('Failed to load');
     }
@@ -92,7 +95,9 @@ class _ProcessState extends State<Process> {
           "operator": operatorCode.toString(),
           "elasp": elasp.toString(),
           "timecreated": timecreated.toString(),
-          "timedone": DateTime.now().toString()
+          "timedone": DateFormat.yMd().add_jm().format(
+                DateTime.now(),
+              )
         },
       ),
       encoding: Encoding.getByName('utf-8'),
@@ -167,12 +172,15 @@ class _ProcessState extends State<Process> {
     // Future Scan QR Code
     Future scan() async {
       try {
-        String barcode = (await BarcodeScanner.scan()) as String;
+        var result = await BarcodeScanner.scan();
+        // print(result.type); // The result type (barcode, cancelled, failed)
+        // print(result.rawContent); // The barcode content
+        // print(result.format); // The barcode format (as enum)
+        // print(result.formatNote);
         setState(() {
-          this.barcode = barcode;
+          barcode = result.rawContent.toString();
           _stateQrCode = true;
         });
-        print(barcode);
       } on PlatformException catch (e) {
         if (e.code == BarcodeScanner.cameraAccessDenied) {
           // The user did not grant the camera permission.
@@ -229,7 +237,7 @@ class _ProcessState extends State<Process> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: new Text("Processing : " + widget.processName),
+        title: new Text(barcode),
         actions: <Widget>[
           IconButton(
               icon: Icon(
@@ -269,7 +277,7 @@ class _ProcessState extends State<Process> {
                               await Future.delayed(
                                   Duration(microseconds: 500), () {});
                               await scan();
-                              if (_stateQrCode && barcode != "") {
+                              if (_stateQrCode) {
                                 // Insert Data to Database
                                 await fetchInsert(
                                     snapshot.data[index].date,
@@ -278,6 +286,10 @@ class _ProcessState extends State<Process> {
                                     snapshot.data[index].operatorCode,
                                     _timestart[snapshot.data[index].machine],
                                     snapshot.data[index].timecreated);
+                                await fetchUpdate(
+                                    snapshot.data[index].id.toString(),
+                                    "Done",
+                                    barcode);
                                 setState(() {
                                   // Reset _stateQrCode = false
                                   _stateQrCode = false;
@@ -297,7 +309,7 @@ class _ProcessState extends State<Process> {
                                   Duration(microseconds: 500), () {});
                               // Scan Camera
                               await scan();
-                              if (_stateQrCode && barcode != "") {
+                              if (_stateQrCode) {
                                 // Update Data to Database
                                 await fetchUpdate(
                                     snapshot.data[index].id.toString(),

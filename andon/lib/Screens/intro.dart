@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:andon/Screens/category.dart';
-import 'package:step_progress_indicator/step_progress_indicator.dart';
 
 class Intro extends StatefulWidget {
   static String routeName = 'intro';
