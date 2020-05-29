@@ -184,7 +184,7 @@ Widget gridview(
     BuildContext context, List payload, List<Color> _colorful, Map zoneNum) {
   var height = MediaQuery.of(context).size.height;
   return Container(
-    padding: EdgeInsets.only(left: 10, right: 10,bottom: 30),
+    padding: EdgeInsets.only(left: 10, right: 10, bottom: 30),
     height: height * 0.7,
     child: GridView.count(
       // scrollDirection: Axis.vertical,
@@ -196,6 +196,10 @@ Widget gridview(
         var combineZone = payload[index].machine.toString() +
             "_" +
             payload[index].zone.toString();
+        var queneZone = zoneNum[payload[index].machine.toString() +
+                "_" +
+                payload[index].zone.toString()]
+            .toString();
         return Stack(
           children: <Widget>[
             CardMenu(
@@ -226,10 +230,7 @@ Widget gridview(
                         shape: BoxShape.circle,
                       ),
                       child: Text(
-                        zoneNum[payload[index].machine.toString() +
-                                "_" +
-                                payload[index].zone.toString()]
-                            .toString(),
+                        queneZone,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 25,
