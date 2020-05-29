@@ -16,14 +16,13 @@ import 'package:redux/redux.dart';
 import 'package:redux_thunk/redux_thunk.dart';
 import 'package:redux_logging/redux_logging.dart';
 import 'package:andon/Stores/socketMiddleware.dart';
-import 'package:andon/Stores/appState.dart';
 
 Injector injector;
 typedef Provider<T> = T Function();
 void main() async {
-  final Store store = Store<InitialState>(
+  final Store store = Store<AppState>(
     categoryReducer,
-    initialState: InitialState(),
+    initialState: AppState.initialState(),
     middleware: [
       thunkMiddleware,
       LoggingMiddleware.printer(),
@@ -51,7 +50,7 @@ class FlutterReduxApp extends StatefulWidget {
 class _FlutterReduxAppState extends State<FlutterReduxApp> {
   @override
   Widget build(BuildContext context) {
-    return StoreProvider(
+    return StoreProvider<AppState>(
       store: widget.store,
       child: MaterialApp(
         title: 'Andon Annoucement',

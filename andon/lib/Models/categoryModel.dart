@@ -43,3 +43,19 @@ class EventProcess {
     );
   }
 }
+
+class AppState {
+  final List<CategoryModel> category;
+  final List<EventProcess> process;
+  final String status;
+
+  AppState({this.category, this.process, this.status});
+
+  factory AppState.initialState() => AppState(
+        category: List.unmodifiable(<CategoryModel>[]),
+        process: List.unmodifiable(
+          <EventProcess>[],
+        ),
+        status: "",
+      );
+}

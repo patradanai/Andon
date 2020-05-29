@@ -19,14 +19,22 @@ ThunkAction<CategoryModel> getEvent() => (Store store) async {
           payload.add(category);
         }
 
-        store.dispatch(UpdateAction(type: "CategoryAPI", message: payload));
+        store.dispatch(
+            UpdateAction(type: ActionType.CategoryAPI, message: payload));
       } else {
         throw Exception('Failed to load');
       }
     };
 
 class UpdateAction {
-  String type;
+  ActionType type;
   dynamic message;
   UpdateAction({this.type, this.message});
+}
+
+enum ActionType {
+  CategoryAPI,
+  DisconnectSocket,
+  ConnectSocket,
+  StatusChanged,
 }

@@ -7,7 +7,6 @@ import 'package:flutter_redux/flutter_redux.dart';
 import 'package:andon/Stores/viewModel.dart';
 import 'package:andon/Services/apiClient.dart';
 import 'package:andon/Stores/action.dart';
-import 'package:andon/Stores/appState.dart';
 // Notigication
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -83,25 +82,20 @@ class _CategoryMenuState extends State<CategoryMenu> {
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
 
-    return StoreConnector(
+    return StoreConnector<AppState,CategoryView>(
       converter: (store) {
-        return CategoryView(
-          state: store.state,
-          getCategory: () => store.dispatch(
-            getEvent(),
-          ),
-        );
+        return CategoryView.create(store);
       },
       onInit: (store) {
         print("Connected SOCKET");
         store.dispatch(
-          UpdateAction(type: "CONNECTSOCKET"),
+          UpdateAction(type: ActionType.ConnectSocket),
         );
       },
       onDispose: (store) {
         print("DisConnected");
         store.dispatch(
-          UpdateAction(type: "DISCONNECTSOCKET"),
+          UpdateAction(type: ActionType.DisconnectSocket),
         );
       },
       builder: (context, CategoryView model) {
@@ -133,7 +127,7 @@ class _CategoryMenuState extends State<CategoryMenu> {
                         ),
                         SizedBox(height: 10),
                         Text(
-                          "In Quene : " + model.state.status.toString(),
+                          "In Quene : " + model.status.toString(),
                           style: TextStyle(
                             fontSize: 25,
                             fontWeight: FontWeight.w500,
@@ -144,27 +138,28 @@ class _CategoryMenuState extends State<CategoryMenu> {
                   ),
                 ),
                 Positioned(
-                    top: height * 0.3,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      padding: EdgeInsets.only(left: 10, right: 10),
-                      constraints: BoxConstraints(
-                        maxHeight: height * 0.7,
-                      ),
-                      child: FutureBuilder(
-                        future: myData,
-                        builder: (context, snapshot) {
-                          if (snapshot.data == null || !stateLoading) {
-                            // By default, show a loading spinner.
-                            return Center(child: CircularProgressIndicator());
-                          } else {
-                            return gridview(
-                                context, snapshot, _colorful, zoneNum);
-                          }
-                        },
-                      ),
-                    ))
+                  top: height * 0.3,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    padding: EdgeInsets.only(left: 10, right: 10),
+                    constraints: BoxConstraints(
+                      maxHeight: height * 0.7,
+                    ),
+                    child: FutureBuilder(
+                      future: myData,
+                      builder: (context, snapshot) {
+                        if (snapshot.data == null || !stateLoading) {
+                          // By default, show a loading spinner.
+                          return Center(child: CircularProgressIndicator());
+                        } else {
+                          return gridview(
+                              context, snapshot, _colorful, zoneNum);
+                        }
+                      },
+                    ),
+                  ),
+                )
               ],
             ),
           ),
@@ -245,17 +240,6 @@ Widget gridview(BuildContext context, AsyncSnapshot payload,
                   ),
                 )
               : null,
-          // StoreConnector<dynamic, StateModel>(
-          //   converter: (store) {
-          //     return StateModel(
-          //       state: store.state,
-          //       onUpdateState: store.dispatch("UPDATECATEGORY"),
-          //     );
-          //   },
-          //   builder: (context, model) {
-          //     return Text(model.state.counter.toString());
-          //   },
-          // )
         ].where((child) => child != null).toList(),
       );
     }),
