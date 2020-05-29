@@ -111,6 +111,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.6.0"
+  flutter_redux_dev_tools:
+    dependency: "direct main"
+    description:
+      name: flutter_redux_dev_tools
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.4.0"
   flutter_simple_dependency_injection:
     dependency: "direct main"
     description:
@@ -263,6 +270,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "4.0.0"
+  redux_dev_tools:
+    dependency: "direct main"
+    description:
+      name: redux_dev_tools
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.5.2"
   redux_logging:
     dependency: "direct main"
     description:

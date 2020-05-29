@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:andon/main.dart';
 import 'package:flutter/material.dart';
 import 'package:andon/Widgets/cardMenu.dart';
 import 'package:andon/Screens/process.dart';
@@ -7,11 +8,16 @@ import 'package:flutter_redux/flutter_redux.dart';
 import 'package:andon/Stores/viewModel.dart';
 import 'package:andon/Services/apiClient.dart';
 import 'package:andon/Stores/action.dart';
+import 'package:flutter_redux_dev_tools/flutter_redux_dev_tools.dart';
+import 'package:redux_dev_tools/redux_dev_tools.dart';
 // Notigication
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class CategoryMenu extends StatefulWidget {
   static String routeName = 'category';
+  final DevToolsStore<AppState> store;
+
+  CategoryMenu({this.store});
   @override
   _CategoryMenuState createState() => _CategoryMenuState();
 }
@@ -30,42 +36,36 @@ class _CategoryMenuState extends State<CategoryMenu> {
   Map<String, dynamic> zoneNum = {};
   int countWork = 0;
   bool stateLoading = false;
-  Future<List<CategoryModel>> myData;
-  Future<List<EventProcess>> processData;
+  List<CategoryModel> myData;
+  List<EventProcess> processData;
 
-  Future countZone() async {
-    myData = ApiClient.fetchAlbum();
-    processData = ApiClient.fetchProcess();
-    await myData.then((value) {
-      for (var i in value) {
-        setState(() {
-          // Add ZoneName in Varaible
-          zoneName.add(i.machine + "_" + i.zone);
-        });
-      }
+  Future countZone(model) async {
+    myData = model.category;
+    processData = model.process;
+
+    for (var i in myData) {
+      setState(() {
+        // Add ZoneName in Varaible
+        zoneName.add(i.machine + "_" + i.zone);
+      });
+    }
+    setState(() {
+      // Update Count Quene
+      countWork = processData.length;
     });
-    await processData.then(
-      (value) {
-        setState(() {
-          // Update Count Quene
-          countWork = value.length;
-        });
 
-        for (var i in zoneName) {
-          int count = 0;
-          for (var k in value) {
-            if (k.zone == i) {
-              count = count + 1;
-            }
-          }
-          setState(() {
-            // Update Map ZoneNum
-            zoneNum[i] = count;
-          });
+    for (var i in zoneName) {
+      int count = 0;
+      for (var k in processData) {
+        if (k.zone == i) {
+          count = count + 1;
         }
-      },
-    );
-
+      }
+      setState(() {
+        // Update Map ZoneNum
+        zoneNum[i] = count;
+      });
+    }
     setState(() {
       stateLoading = true;
     });
@@ -75,18 +75,21 @@ class _CategoryMenuState extends State<CategoryMenu> {
   void initState() {
     // implement initState
     super.initState();
-    countZone();
   }
 
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
 
-    return StoreConnector<AppState,CategoryView>(
+    return StoreConnector<AppState, CategoryView>(
       converter: (store) {
         return CategoryView.create(store);
       },
-      onInit: (store) {
+      onInit: (store) async {
+        await store.dispatch(getCategoryAction());
+        await store.dispatch(getEventAction());
+        await countZone(store.state);
+
         print("Connected SOCKET");
         store.dispatch(
           UpdateAction(type: ActionType.ConnectSocket),
@@ -142,22 +145,15 @@ class _CategoryMenuState extends State<CategoryMenu> {
                   left: 0,
                   right: 0,
                   child: Container(
-                    padding: EdgeInsets.only(left: 10, right: 10),
-                    constraints: BoxConstraints(
-                      maxHeight: height * 0.7,
-                    ),
-                    child: FutureBuilder(
-                      future: myData,
-                      builder: (context, snapshot) {
-                        if (snapshot.data == null || !stateLoading) {
-                          // By default, show a loading spinner.
-                          return Center(child: CircularProgressIndicator());
-                        } else {
-                          return gridview(
-                              context, snapshot, _colorful, zoneNum);
-                        }
-                      },
-                    ),
+                    height: height * 0.7,
+                    child: (model.category.length > 0 && stateLoading)
+                        ? ListView.builder(
+                            itemCount: model.category.length,
+                            itemBuilder: (context, index) {
+                              return gridview(
+                                  context, model.category, _colorful, zoneNum);
+                            })
+                        : Center(child: CircularProgressIndicator()),
                   ),
                 )
               ],
@@ -184,64 +180,69 @@ class BezierClipper extends CustomClipper<Path> {
   bool shouldReclip(CustomClipper<Path> oldClipper) => true;
 }
 
-Widget gridview(BuildContext context, AsyncSnapshot payload,
-    List<Color> _colorful, Map zoneNum) {
-  return GridView.count(
-    // scrollDirection: Axis.vertical,
-    childAspectRatio: 1.0,
-    // crossAxisSpacing: 10.0,
-    shrinkWrap: true,
-    crossAxisCount: 2,
-    children: List.generate(payload.data.length, (index) {
-      var combineZone = payload.data[index].machine.toString() +
-          "_" +
-          payload.data[index].zone.toString();
-      return Stack(
-        children: <Widget>[
-          CardMenu(
-            pressButton: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return Process(
-                      processName: combineZone,
-                    );
-                  },
-                ),
-              );
-            },
-            label: payload.data[index].machine.toString(),
-            zone: payload.data[index].zone.toString(),
-            color: _colorful[index],
-          ),
-          zoneNum[combineZone] != 0
-              ? Positioned(
-                  right: 0,
-                  child: Container(
-                    height: 64,
-                    width: 64,
-                    decoration: BoxDecoration(
-                      color: Color(0xFFEA4633),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      zoneNum[payload.data[index].machine.toString() +
-                              "_" +
-                              payload.data[index].zone.toString()]
-                          .toString(),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 25,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    alignment: Alignment.center,
+Widget gridview(
+    BuildContext context, List payload, List<Color> _colorful, Map zoneNum) {
+  var height = MediaQuery.of(context).size.height;
+  return Container(
+    padding: EdgeInsets.only(left: 10, right: 10,bottom: 30),
+    height: height * 0.7,
+    child: GridView.count(
+      // scrollDirection: Axis.vertical,
+      childAspectRatio: 1.0,
+      // crossAxisSpacing: 10.0,
+      shrinkWrap: true,
+      crossAxisCount: 2,
+      children: List.generate(payload.length, (index) {
+        var combineZone = payload[index].machine.toString() +
+            "_" +
+            payload[index].zone.toString();
+        return Stack(
+          children: <Widget>[
+            CardMenu(
+              pressButton: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return Process(
+                        processName: combineZone,
+                      );
+                    },
                   ),
-                )
-              : null,
-        ].where((child) => child != null).toList(),
-      );
-    }),
+                );
+              },
+              label: payload[index].machine.toString(),
+              zone: payload[index].zone.toString(),
+              color: _colorful[index],
+            ),
+            zoneNum[combineZone] != 0
+                ? Positioned(
+                    right: 0,
+                    child: Container(
+                      height: 64,
+                      width: 64,
+                      decoration: BoxDecoration(
+                        color: Color(0xFFEA4633),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        zoneNum[payload[index].machine.toString() +
+                                "_" +
+                                payload[index].zone.toString()]
+                            .toString(),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 25,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                    ),
+                  )
+                : null,
+          ].where((child) => child != null).toList(),
+        );
+      }),
+    ),
   );
 }

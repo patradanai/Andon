@@ -16,11 +16,12 @@ import 'package:redux/redux.dart';
 import 'package:redux_thunk/redux_thunk.dart';
 import 'package:redux_logging/redux_logging.dart';
 import 'package:andon/Stores/socketMiddleware.dart';
+import 'package:redux_dev_tools/redux_dev_tools.dart';
 
 Injector injector;
 typedef Provider<T> = T Function();
 void main() async {
-  final Store store = Store<AppState>(
+  final DevToolsStore<AppState> store = DevToolsStore<AppState>(
     categoryReducer,
     initialState: AppState.initialState(),
     middleware: [
@@ -38,20 +39,15 @@ void main() async {
   runApp(FlutterReduxApp(store));
 }
 
-class FlutterReduxApp extends StatefulWidget {
-  final Store store;
+
+class FlutterReduxApp extends StatelessWidget {
+  final DevToolsStore<AppState> store;
 
   FlutterReduxApp(this.store);
-
-  @override
-  _FlutterReduxAppState createState() => _FlutterReduxAppState();
-}
-
-class _FlutterReduxAppState extends State<FlutterReduxApp> {
   @override
   Widget build(BuildContext context) {
     return StoreProvider<AppState>(
-      store: widget.store,
+      store: store,
       child: MaterialApp(
         title: 'Andon Annoucement',
         theme: ThemeData(
@@ -62,7 +58,7 @@ class _FlutterReduxAppState extends State<FlutterReduxApp> {
         initialRoute: Intro.routeName,
         routes: {
           Intro.routeName: (context) => Intro(),
-          CategoryMenu.routeName: (context) => CategoryMenu(),
+          CategoryMenu.routeName: (context) => CategoryMenu(store:store),
           Process.routeName: (context) => Process()
         },
       ),
