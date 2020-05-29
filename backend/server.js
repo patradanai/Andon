@@ -38,9 +38,10 @@ io.on("connection", (client) => {
   client.on("disconnect", () => {
     console.log("DisConnected");
   });
-
+  let data = 0;
   setInterval(() => {
+    data = data + 1;
     console.log("sending");
     client.emit("data", { data: 1 });
-  }, 2000);
+  }, 10000);
 });

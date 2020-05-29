@@ -7,10 +7,12 @@ import 'package:flutter_redux/flutter_redux.dart';
 import 'package:andon/Stores/viewModel.dart';
 import 'package:andon/Services/apiClient.dart';
 import 'package:andon/Stores/action.dart';
+import 'package:andon/Stores/appState.dart';
+// Notigication
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class CategoryMenu extends StatefulWidget {
   static String routeName = 'category';
-
   @override
   _CategoryMenuState createState() => _CategoryMenuState();
 }
@@ -90,6 +92,18 @@ class _CategoryMenuState extends State<CategoryMenu> {
           ),
         );
       },
+      onInit: (store) {
+        print("Connected SOCKET");
+        store.dispatch(
+          UpdateAction(type: "CONNECTSOCKET"),
+        );
+      },
+      onDispose: (store) {
+        print("DisConnected");
+        store.dispatch(
+          UpdateAction(type: "DISCONNECTSOCKET"),
+        );
+      },
       builder: (context, CategoryView model) {
         return Scaffold(
           body: Container(
@@ -119,7 +133,7 @@ class _CategoryMenuState extends State<CategoryMenu> {
                         ),
                         SizedBox(height: 10),
                         Text(
-                          "In Quene : " + countWork.toString(),
+                          "In Quene : " + model.state.status.toString(),
                           style: TextStyle(
                             fontSize: 25,
                             fontWeight: FontWeight.w500,

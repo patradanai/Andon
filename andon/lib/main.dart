@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:andon/Models/categoryModel.dart';
 import 'package:andon/Services/app_initializer.dart';
 import 'package:andon/Services/dependecy_injection.dart';
@@ -14,40 +15,44 @@ import 'package:flutter_redux/flutter_redux.dart';
 import 'package:redux/redux.dart';
 import 'package:redux_thunk/redux_thunk.dart';
 import 'package:redux_logging/redux_logging.dart';
-
-class InitialState {
-  dynamic category;
-  InitialState({this.category});
-}
+import 'package:andon/Stores/socketMiddleware.dart';
+import 'package:andon/Stores/appState.dart';
 
 Injector injector;
+typedef Provider<T> = T Function();
 void main() async {
-  final Store store = Store(
+  final Store store = Store<InitialState>(
     categoryReducer,
     initialState: InitialState(),
     middleware: [
       thunkMiddleware,
       LoggingMiddleware.printer(),
+      SocketMiddleware()
     ],
   );
   // Injector
-  DependencyInjection().initialise(Injector.getInjector());
-  injector = Injector.getInjector();
-  await AppInitializer().initialise(injector);
-  final SocketService socketService = injector.get<SocketService>();
-  socketService.createSocketConnection();
+  // DependencyInjection().initialise(Injector.getInjector());
+  // injector = Injector.getInjector();
+  // await AppInitializer().initialise(injector);
+  //   final SocketService socketService = injector.get<SocketService>();
+  //   socketService.createSocketConnection();
   runApp(FlutterReduxApp(store));
 }
 
-class FlutterReduxApp extends StatelessWidget {
+class FlutterReduxApp extends StatefulWidget {
   final Store store;
 
   FlutterReduxApp(this.store);
-  // This widget is the root of your application.
+
+  @override
+  _FlutterReduxAppState createState() => _FlutterReduxAppState();
+}
+
+class _FlutterReduxAppState extends State<FlutterReduxApp> {
   @override
   Widget build(BuildContext context) {
     return StoreProvider(
-      store: store,
+      store: widget.store,
       child: MaterialApp(
         title: 'Andon Annoucement',
         theme: ThemeData(
