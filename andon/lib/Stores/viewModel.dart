@@ -2,20 +2,20 @@ import 'package:andon/Models/categoryModel.dart';
 import 'package:redux/redux.dart';
 import 'package:andon/Stores/action.dart';
 
-class CategoryView {
+class ModelView {
   final List<CategoryModel> category;
   final List<EventProcess> event;
   final Function() getCategory;
   final Function() getEventProcess;
   final String status;
-  CategoryView(
+  ModelView(
       {this.category,
       this.event,
       this.getCategory,
       this.getEventProcess,
       this.status});
 
-  factory CategoryView.create(Store<AppState> store) {
+  factory ModelView.create(Store<AppState> store) {
     _getCategory() {
       store.dispatch(getCategoryAction());
     }
@@ -24,7 +24,7 @@ class CategoryView {
       store.dispatch(getEventAction());
     }
 
-    return CategoryView(
+    return ModelView(
         category: store.state.category,
         event: store.state.process,
         getCategory: _getCategory,

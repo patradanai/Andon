@@ -1,14 +1,11 @@
 import 'dart:async';
-import 'package:andon/main.dart';
 import 'package:flutter/material.dart';
 import 'package:andon/Widgets/cardMenu.dart';
 import 'package:andon/Screens/process.dart';
 import 'package:andon/Models/categoryModel.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 import 'package:andon/Stores/viewModel.dart';
-import 'package:andon/Services/apiClient.dart';
 import 'package:andon/Stores/action.dart';
-import 'package:flutter_redux_dev_tools/flutter_redux_dev_tools.dart';
 import 'package:redux_dev_tools/redux_dev_tools.dart';
 // Notigication
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -81,9 +78,9 @@ class _CategoryMenuState extends State<CategoryMenu> {
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
 
-    return StoreConnector<AppState, CategoryView>(
+    return StoreConnector<AppState, ModelView>(
       converter: (store) {
-        return CategoryView.create(store);
+        return ModelView.create(store);
       },
       onInit: (store) async {
         await store.dispatch(getCategoryAction());
@@ -101,7 +98,7 @@ class _CategoryMenuState extends State<CategoryMenu> {
           UpdateAction(type: ActionType.DisconnectSocket),
         );
       },
-      builder: (context, CategoryView model) {
+      builder: (context, ModelView model) {
         return Scaffold(
           body: Container(
             height: height,
