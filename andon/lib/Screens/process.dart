@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:andon/Stores/action.dart';
 import 'package:flutter/material.dart';
 import 'package:barcode_scan/barcode_scan.dart';
 import 'package:flutter/services.dart';
@@ -33,8 +34,9 @@ class _ProcessState extends State<Process> {
   List<EventProcess> myData = [];
   bool _stateQrCode = false;
 
-  // Function
+  // Function Pull data and Filter
   Future fetchProcess(model) async {
+    myData = [];
     List<EventProcess> tempData = model.process;
 
     for (var i in tempData) {
@@ -97,7 +99,7 @@ class _ProcessState extends State<Process> {
     }
   }
 
-  // Update timestart and datetime.now()
+  // Update timestamps and datetime.now()
   void _diffTime() {
     final now = DateTime.now();
     for (var i in myData) {
@@ -223,6 +225,7 @@ class _ProcessState extends State<Process> {
         converter: (store) => ModelView.create(store),
         onInit: (store) {
           WidgetsBinding.instance.addPostFrameCallback((_) async {
+            // Pull Data and Filter
             await fetchProcess(store.state);
             _diffTime();
           });
@@ -239,100 +242,111 @@ class _ProcessState extends State<Process> {
                       size: 30,
                     ),
                     onPressed: () async {
-                      model.getEventProcess();
-
+                      // Refresh all Data
+                      await model.store.dispatch(getEventAction());
+                      // Pull data and Filter
+                      await fetchProcess(model.store.state);
                       _diffTime();
                     })
               ],
               backgroundColor: Color(0xFFA47EF3),
             ),
-            body: Container(
-              color: Colors.grey[300],
-              child: myData.length == 0
-                  ? Center(
-                    child: Text(
-                        "Waiting Queue",
-                        style: TextStyle(
-                          fontSize: 30,
+            body: RefreshIndicator(
+              onRefresh: () async {
+                // Refresh all Data
+                await model.store.dispatch(getEventAction());
+                // Pull data and Filter
+                await fetchProcess(model.store.state);
+                _diffTime();
+              },
+              child: Container(
+                color: Colors.grey[300],
+                child: myData.length == 0
+                    ? Center(
+                        child: Text(
+                          "Waiting Queue",
+                          style: TextStyle(
+                            fontSize: 30,
+                          ),
                         ),
+                      )
+                    : ListView.builder(
+                        itemCount: myData.length,
+                        itemBuilder: (context, index) {
+                          return CardProcess(
+                            pressButton: () {
+                              // scan();
+                              if (myData[index].process == "Processing") {
+                                _dialogEndJob(
+                                  () async {
+                                    Navigator.pop(context);
+                                    await Future.delayed(
+                                        Duration(microseconds: 500), () {});
+                                    await scan();
+                                    if (_stateQrCode && barcode != "") {
+                                      // Insert Data to Database
+                                      await fetchInsert(
+                                          myData[index].date,
+                                          myData[index].machine,
+                                          myData[index].operation,
+                                          myData[index].operatorCode,
+                                          _timestart[myData[index].machine],
+                                          myData[index].timecreated);
+                                      await fetchUpdate(
+                                          myData[index].id.toString(),
+                                          "Done",
+                                          barcode);
+                                      setState(() {
+                                        // Reset _stateQrCode = false
+                                        _stateQrCode = false;
+                                        barcode = "";
+                                      });
+                                    }
+                                  },
+                                  () {
+                                    Navigator.pop(context);
+                                  },
+                                );
+                              } else if (myData[index].process == "Wait") {
+                                _dialogGetJob(
+                                  () async {
+                                    Navigator.pop(context);
+                                    await Future.delayed(
+                                        Duration(microseconds: 500), () {});
+                                    // Scan Camera
+                                    await scan();
+                                    if (_stateQrCode && barcode != "") {
+                                      // Update Data to Database
+                                      await fetchUpdate(
+                                          myData[index].id.toString(),
+                                          "Processing",
+                                          barcode);
+                                      setState(() {
+                                        // Reset _stateQrCode = false
+                                        _stateQrCode = false;
+                                        barcode = "";
+                                      });
+                                    }
+                                  },
+                                  () {
+                                    Navigator.pop(context);
+                                  },
+                                );
+                              }
+                            },
+                            operation: myData[index].operation,
+                            machine: myData[index].machine,
+                            time: _timestart[myData[index].machine] != null
+                                ? _timestart[myData[index].machine].toString()
+                                : "Loading...",
+                            processing: myData[index].process,
+                            color: myData[index].process == "Wait"
+                                ? Colors.white
+                                : Color(0xFFED638B),
+                          );
+                        },
                       ),
-                  )
-                  : ListView.builder(
-                      itemCount: myData.length,
-                      itemBuilder: (context, index) {
-                        return CardProcess(
-                          pressButton: () {
-                            // scan();
-                            if (myData[index].process == "Processing") {
-                              _dialogEndJob(
-                                () async {
-                                  Navigator.pop(context);
-                                  await Future.delayed(
-                                      Duration(microseconds: 500), () {});
-                                  await scan();
-                                  if (_stateQrCode && barcode != "") {
-                                    // Insert Data to Database
-                                    await fetchInsert(
-                                        myData[index].date,
-                                        myData[index].machine,
-                                        myData[index].operation,
-                                        myData[index].operatorCode,
-                                        _timestart[myData[index].machine],
-                                        myData[index].timecreated);
-                                    await fetchUpdate(
-                                        myData[index].id.toString(),
-                                        "Done",
-                                        barcode);
-                                    setState(() {
-                                      // Reset _stateQrCode = false
-                                      _stateQrCode = false;
-                                      barcode = "";
-                                    });
-                                  }
-                                },
-                                () {
-                                  Navigator.pop(context);
-                                },
-                              );
-                            } else if (myData[index].process == "Wait") {
-                              _dialogGetJob(
-                                () async {
-                                  Navigator.pop(context);
-                                  await Future.delayed(
-                                      Duration(microseconds: 500), () {});
-                                  // Scan Camera
-                                  await scan();
-                                  if (_stateQrCode && barcode != "") {
-                                    // Update Data to Database
-                                    await fetchUpdate(
-                                        myData[index].id.toString(),
-                                        "Processing",
-                                        barcode);
-                                    setState(() {
-                                      // Reset _stateQrCode = false
-                                      _stateQrCode = false;
-                                      barcode = "";
-                                    });
-                                  }
-                                },
-                                () {
-                                  Navigator.pop(context);
-                                },
-                              );
-                            }
-                          },
-                          operation: myData[index].operation,
-                          machine: myData[index].machine,
-                          time: _timestart[myData[index].machine] != null
-                              ? _timestart[myData[index].machine].toString()
-                              : "Loading...",
-                          processing: myData[index].process,
-                          color: myData[index].process == "Wait"
-                              ? Colors.white
-                              : Color(0xFFED638B),
-                        );
-                      },
-                    ),
+              ),
             ),
           );
         });

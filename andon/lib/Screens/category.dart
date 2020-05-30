@@ -7,6 +7,7 @@ import 'package:flutter_redux/flutter_redux.dart';
 import 'package:andon/Stores/viewModel.dart';
 import 'package:andon/Stores/action.dart';
 import 'package:redux_dev_tools/redux_dev_tools.dart';
+import 'package:andon/Constants.dart';
 // Notigication
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -20,15 +21,6 @@ class CategoryMenu extends StatefulWidget {
 }
 
 class _CategoryMenuState extends State<CategoryMenu> {
-  List<Color> _colorful = [
-    Color(0xFFF2DDB8),
-    Color(0xFFFFC599),
-    Color(0xFFEBEEF3),
-    Color(0xFFCFDFAC),
-    Color(0xFFF1AEAF),
-    Color(0xFFF6E27B),
-    Color(0xFFF6A27A)
-  ];
   List<String> zoneName = [];
   Map<String, dynamic> zoneNum = {};
   int countWork = 0;
@@ -42,12 +34,12 @@ class _CategoryMenuState extends State<CategoryMenu> {
 
     for (var i in myData) {
       setState(() {
-        // Add ZoneName in Varaible
+        // Add ZoneName in Variable
         zoneName.add(i.machine + "_" + i.zone);
       });
     }
     setState(() {
-      // Update Count Quene
+      // Update Count Queue
       countWork = processData.length;
     });
 
@@ -127,7 +119,7 @@ class _CategoryMenuState extends State<CategoryMenu> {
                         ),
                         SizedBox(height: 10),
                         Text(
-                          "In Quene : " + model.status.toString(),
+                          "In Queue : " + model.status.toString(),
                           style: TextStyle(
                             fontSize: 25,
                             fontWeight: FontWeight.w500,
@@ -141,16 +133,24 @@ class _CategoryMenuState extends State<CategoryMenu> {
                   top: height * 0.3,
                   left: 0,
                   right: 0,
-                  child: Container(
-                    height: height * 0.7,
-                    child: (model.category.length > 0 && stateLoading)
-                        ? ListView.builder(
-                            itemCount: model.category.length,
-                            itemBuilder: (context, index) {
-                              return gridview(
-                                  context, model.category, _colorful, zoneNum);
-                            })
-                        : Center(child: CircularProgressIndicator()),
+                  child: RefreshIndicator(
+                    onRefresh:() async{
+                      print('refreshing');
+                      await model.store.dispatch(getCategoryAction());
+                      await model.store.dispatch(getEventAction());
+                      await countZone(model.store.state);
+                    },
+                    child: Container(
+                      height: height * 0.7,
+                      child: (model.category.length > 0 && stateLoading)
+                          ? ListView.builder(
+                              itemCount: model.category.length,
+                              itemBuilder: (context, index) {
+                                return gridView(
+                                    context, model.category, colorful, zoneNum);
+                              })
+                          : Center(child: CircularProgressIndicator()),
+                    ),
                   ),
                 )
               ],
@@ -177,7 +177,7 @@ class BezierClipper extends CustomClipper<Path> {
   bool shouldReclip(CustomClipper<Path> oldClipper) => true;
 }
 
-Widget gridview(
+Widget gridView(
     BuildContext context, List payload, List<Color> _colorful, Map zoneNum) {
   var height = MediaQuery.of(context).size.height;
   return Container(
@@ -193,7 +193,7 @@ Widget gridview(
         var combineZone = payload[index].machine.toString() +
             "_" +
             payload[index].zone.toString();
-        var queneZone = zoneNum[payload[index].machine.toString() +
+        var queueZone = zoneNum[payload[index].machine.toString() +
                 "_" +
                 payload[index].zone.toString()]
             .toString();
@@ -227,7 +227,7 @@ Widget gridview(
                         shape: BoxShape.circle,
                       ),
                       child: Text(
-                        queneZone,
+                        queueZone,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 25,
