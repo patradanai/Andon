@@ -69,6 +69,8 @@ class _CategoryMenuState extends State<CategoryMenu> {
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
+    final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
+        new GlobalKey<RefreshIndicatorState>();
 
     return StoreConnector<AppState, ModelView>(
       converter: (store) {
@@ -133,23 +135,20 @@ class _CategoryMenuState extends State<CategoryMenu> {
                   top: height * 0.3,
                   left: 0,
                   right: 0,
-                  child: RefreshIndicator(
-                    onRefresh:() async{
-                      print('refreshing');
-                      await model.store.dispatch(getCategoryAction());
-                      await model.store.dispatch(getEventAction());
-                      await countZone(model.store.state);
-                    },
-                    child: Container(
-                      height: height * 0.7,
+                  child: Container(
+                    height: height * 0.7,
+                    child: Center(
                       child: (model.category.length > 0 && stateLoading)
                           ? ListView.builder(
                               itemCount: model.category.length,
                               itemBuilder: (context, index) {
-                                return gridView(
-                                    context, model.category, colorful, zoneNum);
-                              })
-                          : Center(child: CircularProgressIndicator()),
+                                return gridView(context, model.category,
+                                    colorful, zoneNum, model, countZone);
+                              },
+                            )
+                          : Center(
+                              child: CircularProgressIndicator(),
+                            ),
                     ),
                   ),
                 )
@@ -178,69 +177,77 @@ class BezierClipper extends CustomClipper<Path> {
 }
 
 Widget gridView(
-    BuildContext context, List payload, List<Color> _colorful, Map zoneNum) {
+    BuildContext context, List payload, List<Color> _colorful, Map zoneNum,ModelView model,Function countZone) {
   var height = MediaQuery.of(context).size.height;
   return Container(
     padding: EdgeInsets.only(left: 10, right: 10, bottom: 30),
     height: height * 0.7,
-    child: GridView.count(
-      // scrollDirection: Axis.vertical,
-      childAspectRatio: 1.0,
-      // crossAxisSpacing: 10.0,
-      shrinkWrap: true,
-      crossAxisCount: 2,
-      children: List.generate(payload.length, (index) {
-        var combineZone = payload[index].machine.toString() +
-            "_" +
-            payload[index].zone.toString();
-        var queueZone = zoneNum[payload[index].machine.toString() +
-                "_" +
-                payload[index].zone.toString()]
-            .toString();
-        return Stack(
-          children: <Widget>[
-            CardMenu(
-              pressButton: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return Process(
-                        processName: combineZone,
-                      );
-                    },
-                  ),
-                );
-              },
-              label: payload[index].machine.toString(),
-              zone: payload[index].zone.toString(),
-              color: _colorful[index],
-            ),
-            zoneNum[combineZone] != 0
-                ? Positioned(
-                    right: 0,
-                    child: Container(
-                      height: 64,
-                      width: 64,
-                      decoration: BoxDecoration(
-                        color: Color(0xFFEA4633),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        queueZone,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 25,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      alignment: Alignment.center,
+    child: RefreshIndicator(
+      onRefresh: () async {
+        print('refreshing');
+        await model.store.dispatch(getCategoryAction());
+        await model.store.dispatch(getEventAction());
+        await countZone(model.store.state);
+      },
+      child: GridView.count(
+        // scrollDirection: Axis.vertical,
+        childAspectRatio: 1.0,
+        // crossAxisSpacing: 10.0,
+        shrinkWrap: true,
+        crossAxisCount: 2,
+        children: List.generate(payload.length, (index) {
+          var combineZone = payload[index].machine.toString() +
+              "_" +
+              payload[index].zone.toString();
+          var queueZone = zoneNum[payload[index].machine.toString() +
+                  "_" +
+                  payload[index].zone.toString()]
+              .toString();
+          return Stack(
+            children: <Widget>[
+              CardMenu(
+                pressButton: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return Process(
+                          processName: combineZone,
+                        );
+                      },
                     ),
-                  )
-                : null,
-          ].where((child) => child != null).toList(),
-        );
-      }),
+                  );
+                },
+                label: payload[index].machine.toString(),
+                zone: payload[index].zone.toString(),
+                color: _colorful[index],
+              ),
+              zoneNum[combineZone] != 0
+                  ? Positioned(
+                      right: 0,
+                      child: Container(
+                        height: 64,
+                        width: 64,
+                        decoration: BoxDecoration(
+                          color: Color(0xFFEA4633),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          queueZone,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 25,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                      ),
+                    )
+                  : null,
+            ].where((child) => child != null).toList(),
+          );
+        }),
+      ),
     ),
   );
 }

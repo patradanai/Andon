@@ -253,6 +253,7 @@ class _ProcessState extends State<Process> {
             ),
             body: RefreshIndicator(
               onRefresh: () async {
+                print("Refreshing");
                 // Refresh all Data
                 await model.store.dispatch(getEventAction());
                 // Pull data and Filter
@@ -263,13 +264,13 @@ class _ProcessState extends State<Process> {
                 color: Colors.grey[300],
                 child: myData.length == 0
                     ? Center(
-                        child: Text(
-                          "Waiting Queue",
-                          style: TextStyle(
-                            fontSize: 30,
-                          ),
+                      child: Text(
+                        "Waiting Queue",
+                        style: TextStyle(
+                          fontSize: 30,
                         ),
-                      )
+                      ),
+                    )
                     : ListView.builder(
                         itemCount: myData.length,
                         itemBuilder: (context, index) {
