@@ -2,14 +2,18 @@ import 'dart:async';
 import 'dart:isolate';
 import 'dart:ui';
 import 'package:andon/Models/categoryModel.dart';
-import 'package:andon/Services/app_initializer.dart';
-import 'package:andon/Services/dependecy_injection.dart';
 import 'package:flutter/material.dart';
 import 'package:andon/Screens/category.dart';
 import 'package:andon/Screens/process.dart';
 import 'package:andon/Screens/intro.dart';
+import 'package:andon/Constants.dart' as con;
+// Socket io
+import 'package:andon/Services/app_initializer.dart';
+import 'package:andon/Services/dependecy_injection.dart';
 import 'package:flutter_simple_dependency_injection/injector.dart';
 import 'package:andon/Services/socketService.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
+
 // State Management
 import 'package:andon/Stores/action.dart';
 import 'package:andon/Stores/reducers.dart';
@@ -25,11 +29,33 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:android_alarm_manager/android_alarm_manager.dart';
 
 Injector injector;
-const String portname = "portname";
+const String portName = "portname";
+
+FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+FlutterLocalNotificationsPlugin();
+
+Future singleNotification(
+    String message, String subtext, int hashcode) async {
+  var scheduledNotificationDateTime =
+  DateTime.now().add(Duration(seconds: 5));
+  var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+    'your other channel id',
+    'your other channel name',
+    'your other channel description',
+    importance: Importance.Max,
+    priority: Priority.Max,
+  );
+  var iOSPlatformChannelSpecifics = IOSNotificationDetails();
+  var platformChannel = NotificationDetails(
+      androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+  await flutterLocalNotificationsPlugin.schedule(hashcode, message, subtext,
+      scheduledNotificationDateTime, platformChannel);
+}
+
 void main() async {
   // needed if you intend to initialize in the `main` function
   WidgetsFlutterBinding.ensureInitialized();
-  // Akarm Manager
+  // Alarm Manager
   await AndroidAlarmManager.initialize();
   // Store
   final DevToolsStore<AppState> store = DevToolsStore<AppState>(
@@ -61,8 +87,6 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   ReceivePort port = ReceivePort();
-  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
   Future initializeNotification() async {
 // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
     var initializationSettingsAndroid =
@@ -74,7 +98,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   initIsolate() {
-    if (!IsolateNameServer.registerPortWithName(port.sendPort, portname)) {
+    if (!IsolateNameServer.registerPortWithName(port.sendPort, portName)) {
       throw "Unable to name port";
     }
   }
@@ -90,25 +114,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void dispose() {
     super.dispose();
-    IsolateNameServer.removePortNameMapping(portname);
-  }
-
-  Future singleNotification(
-      String message, String subtext, int hashcode) async {
-    var scheduledNotificationDateTime =
-        DateTime.now().add(Duration(seconds: 5));
-    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      'your other channel id',
-      'your other channel name',
-      'your other channel description',
-      importance: Importance.Max,
-      priority: Priority.Max,
-    );
-    var iOSPlatformChannelSpecifics = IOSNotificationDetails();
-    var platformChannel = NotificationDetails(
-        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
-    await flutterLocalNotificationsPlugin.schedule(hashcode, message, subtext,
-        scheduledNotificationDateTime, platformChannel);
+    IsolateNameServer.removePortNameMapping(portName);
   }
 
   @override
@@ -137,7 +143,7 @@ class _MyAppState extends State<MyApp> {
               child: Icon(Icons.access_alarm),
               onPressed: () {
                 print('Pressed');
-                AndroidAlarmManager.periodic(
+                AndroidAlarmManager.oneShot(
                     Duration(seconds: 5), 0, isolateFunction);
               }),
         ),
@@ -154,8 +160,18 @@ class _MyAppState extends State<MyApp> {
 }
 
 Future isolateFunction() async {
+  IO.Socket socket;
+  socket = IO.io(con.baseUrl, <String, dynamic>{
+    'transports': ['websocket'],
+  });
   print("IsoFunction");
-  SendPort sendPort = IsolateNameServer.lookupPortByName(portname);
+  socket.on('connect', (_) => print('Connected'));
+  socket.on('disconnect', (_) => print('Disconnected'));
+  socket.on("data", (data) {
+    print(data["data"]);
+  });
+  SendPort sendPort = IsolateNameServer.lookupPortByName(portName);
   String data = "WTF";
+//  singleNotification("Notification","What is Noti",929102);
   sendPort?.send(data);
 }
