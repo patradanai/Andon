@@ -1,4 +1,4 @@
-package com.example.andon
+package com.example.andon;
 
 import io.flutter.embedding.android.FlutterActivity
 

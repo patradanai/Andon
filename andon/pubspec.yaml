@@ -43,6 +43,8 @@ dependencies:
   redux: ^4.0.0
   redux_thunk: ^0.3.0
   redux_logging: ^0.4.0
+  android_alarm_manager: ^0.4.4
+  android_intent: ^0.3.7+2
 dev_dependencies:
   flutter_test:
     sdk: flutter
