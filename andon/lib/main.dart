@@ -92,7 +92,7 @@ class _MyAppState extends State<MyApp> {
     initializeNotification();
     initIsolate();
 
-    AndroidAlarmManager.periodic(Duration(minutes: 5), 0, isolateFunction);
+    AndroidAlarmManager.periodic(Duration(seconds: 5), 0, isolateFunction);
   }
 
   @override
@@ -115,8 +115,7 @@ class _MyAppState extends State<MyApp> {
         initialRoute: Intro.routeName,
         routes: {
           Intro.routeName: (context) => Intro(),
-          CategoryMenu.routeName: (context) =>
-              CategoryMenu(store: widget.store),
+          CategoryMenu.routeName: (context) => CategoryMenu(),
           Process.routeName: (context) => Process()
         },
       ),
@@ -124,31 +123,35 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
+// isolateFunction
 Future isolateFunction() async {
   IO.Socket socket;
   List data;
-  socket = IO.io(con.baseUrl, <String, dynamic>{
-    'transports': ['websocket'],
-  });
-  socket.connect();
-  print("IsoFunction");
-  socket.on('connect', (_) => print('Connected'));
-  socket.on('disconnect', (_) => print('Disconnected'));
-  socket.on("data", (value) {
-    data = value.toList();
-    // var payload = value;
-    // print(data);
-    // print(data[value.length - 1]);
-    singleNotification(
-        "Andon Anouncment",
-        'มีการเรียกของานที่เครื่อง ${data[value.length - 1]["machine"]}',
-        929102);
+  // socket = IO.io(con.baseUrl, <String, dynamic>{
+  //   'transports': ['websocket'],
+  // });
+  // socket.connect();
+  // print("IsoFunction");
+  // socket.on('connect', (_) => print('Connected'));
+  // socket.on('disconnect', (_) => print('Disconnected'));
+  // socket.on("data", (value) {
+  //   data = value.toList();
+  //   // var payload = value;
+  //   // print(data);
+  //   // print(data[value.length - 1]);
+  //   singleNotification(
+  //       "Andon Anouncment",
+  //       'มีการเรียกของานที่เครื่อง ${data[value.length - 1]["machine"]}',
+  //       929102);
 
-    SendPort sendPort = IsolateNameServer.lookupPortByName(portName);
-    sendPort?.send(data);
-  });
+  SendPort sendPort = IsolateNameServer.lookupPortByName(portName);
+  String test = "WTF";
+  print("ISOLATE");
+  sendPort?.send(test);
+  // });
 }
 
+// SingleNotification
 Future singleNotification(String message, String subtext, int hashcode) async {
   var scheduledNotificationDateTime = DateTime.now().add(Duration(seconds: 2));
   var androidPlatformChannelSpecifics = AndroidNotificationDetails(

@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:isolate';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:andon/Widgets/cardMenu.dart';
 import 'package:andon/Screens/process.dart';
@@ -13,20 +15,20 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class CategoryMenu extends StatefulWidget {
   static String routeName = 'category';
-  final DevToolsStore<AppState> store;
 
-  CategoryMenu({this.store});
   @override
   _CategoryMenuState createState() => _CategoryMenuState();
 }
 
 class _CategoryMenuState extends State<CategoryMenu> {
+  ReceivePort port = ReceivePort();
   List<String> zoneName = [];
   Map<String, dynamic> zoneNum = {};
   int countWork = 0;
   bool stateLoading = false;
   List<CategoryModel> myData;
   List<EventProcess> processData;
+  String callback;
 
   Future countZone(model) async {
     myData = model.category;
@@ -81,13 +83,13 @@ class _CategoryMenuState extends State<CategoryMenu> {
         await store.dispatch(getEventAction());
         await countZone(store.state);
 
-        print("Connected SOCKET");
+        // print("Connected SOCKET");
         // store.dispatch(
         //   UpdateAction(type: ActionType.ConnectSocket),
         // );
       },
       onDispose: (store) {
-        print("DisConnected");
+        // print("DisConnected");
         // store.dispatch(
         //   UpdateAction(type: ActionType.DisconnectSocket),
         // );
@@ -113,7 +115,7 @@ class _CategoryMenuState extends State<CategoryMenu> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Text(
-                          "Working Area",
+                          callback.toString(),
                           style: TextStyle(
                             fontSize: 45,
                             fontWeight: FontWeight.w800,
@@ -151,7 +153,7 @@ class _CategoryMenuState extends State<CategoryMenu> {
                             ),
                     ),
                   ),
-                )
+                ),
               ],
             ),
           ),
