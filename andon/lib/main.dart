@@ -32,25 +32,7 @@ Injector injector;
 const String portName = "portname";
 
 FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-FlutterLocalNotificationsPlugin();
-
-Future singleNotification(
-    String message, String subtext, int hashcode) async {
-  var scheduledNotificationDateTime =
-  DateTime.now().add(Duration(seconds: 5));
-  var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-    'your other channel id',
-    'your other channel name',
-    'your other channel description',
-    importance: Importance.Max,
-    priority: Priority.Max,
-  );
-  var iOSPlatformChannelSpecifics = IOSNotificationDetails();
-  var platformChannel = NotificationDetails(
-      androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
-  await flutterLocalNotificationsPlugin.schedule(hashcode, message, subtext,
-      scheduledNotificationDateTime, platformChannel);
-}
+    FlutterLocalNotificationsPlugin();
 
 void main() async {
   // needed if you intend to initialize in the `main` function
@@ -109,6 +91,8 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     initializeNotification();
     initIsolate();
+
+    AndroidAlarmManager.periodic(Duration(minutes: 5), 0, isolateFunction);
   }
 
   @override
@@ -128,32 +112,13 @@ class _MyAppState extends State<MyApp> {
           visualDensity: VisualDensity.adaptivePlatformDensity,
           backgroundColor: Colors.blueGrey,
         ),
-        home: Scaffold(
-          appBar: AppBar(
-            title: Text("asdasd"),
-          ),
-          body: StreamBuilder(
-            stream: port.cast(),
-            builder: (context, snapshot) {
-              print(snapshot.data);
-              return Text(snapshot.data.toString());
-            },
-          ),
-          floatingActionButton: FloatingActionButton(
-              child: Icon(Icons.access_alarm),
-              onPressed: () {
-                print('Pressed');
-                AndroidAlarmManager.oneShot(
-                    Duration(seconds: 5), 0, isolateFunction);
-              }),
-        ),
-        // initialRoute: Intro.routeName,
-        // routes: {
-        //   Intro.routeName: (context) => Intro(),
-        //   CategoryMenu.routeName: (context) =>
-        //       CategoryMenu(store: widget.store),
-        //   Process.routeName: (context) => Process()
-        // },
+        initialRoute: Intro.routeName,
+        routes: {
+          Intro.routeName: (context) => Intro(),
+          CategoryMenu.routeName: (context) =>
+              CategoryMenu(store: widget.store),
+          Process.routeName: (context) => Process()
+        },
       ),
     );
   }
@@ -161,17 +126,41 @@ class _MyAppState extends State<MyApp> {
 
 Future isolateFunction() async {
   IO.Socket socket;
+  List data;
   socket = IO.io(con.baseUrl, <String, dynamic>{
     'transports': ['websocket'],
   });
+  socket.connect();
   print("IsoFunction");
   socket.on('connect', (_) => print('Connected'));
   socket.on('disconnect', (_) => print('Disconnected'));
-  socket.on("data", (data) {
-    print(data["data"]);
+  socket.on("data", (value) {
+    data = value.toList();
+    // var payload = value;
+    // print(data);
+    // print(data[value.length - 1]);
+    singleNotification(
+        "Andon Anouncment",
+        'มีการเรียกของานที่เครื่อง ${data[value.length - 1]["machine"]}',
+        929102);
+
+    SendPort sendPort = IsolateNameServer.lookupPortByName(portName);
+    sendPort?.send(data);
   });
-  SendPort sendPort = IsolateNameServer.lookupPortByName(portName);
-  String data = "WTF";
-//  singleNotification("Notification","What is Noti",929102);
-  sendPort?.send(data);
+}
+
+Future singleNotification(String message, String subtext, int hashcode) async {
+  var scheduledNotificationDateTime = DateTime.now().add(Duration(seconds: 2));
+  var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+    'your other channel id',
+    'your other channel name',
+    'your other channel description',
+    importance: Importance.Max,
+    priority: Priority.Max,
+  );
+  var iOSPlatformChannelSpecifics = IOSNotificationDetails();
+  var platformChannel = NotificationDetails(
+      androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+  await flutterLocalNotificationsPlugin.schedule(hashcode, message, subtext,
+      scheduledNotificationDateTime, platformChannel);
 }

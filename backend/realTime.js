@@ -55,6 +55,7 @@ const realTime = async () => {
     return recordsetAll;
   } else {
     console.log("SEEM ID");
+    return [];
   }
 };
 

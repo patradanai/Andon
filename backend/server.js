@@ -40,10 +40,10 @@ io.on("connection", (client) => {
   client.on("disconnect", () => {
     console.log("DisConnected");
   });
-  let data;
+
   setInterval(() => {
     realtime.realTime().then((data) => {
-      if (data != null) {
+      if (data.length > 0) {
         client.emit("data", data);
       }
     });

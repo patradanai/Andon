@@ -15,11 +15,11 @@ class SocketMiddleware extends MiddlewareClass {
       socket.on('connect', (_) => print('Connected'));
       socket.on('disconnect', (_) => print('Disconnected'));
       socket.on("data", (data) {
-        store.dispatch(
-            UpdateAction(type: ActionType.StatusChanged, message: data["data"].toString()));
+        store.dispatch(UpdateAction(
+            type: ActionType.StatusChanged, message: data["data"].toString()));
       });
     } else if (action.type == ActionType.DisconnectSocket) {
-      socket.close();
+      // socket.close();
     }
 
     next(action);

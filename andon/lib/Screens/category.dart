@@ -82,15 +82,15 @@ class _CategoryMenuState extends State<CategoryMenu> {
         await countZone(store.state);
 
         print("Connected SOCKET");
-        store.dispatch(
-          UpdateAction(type: ActionType.ConnectSocket),
-        );
+        // store.dispatch(
+        //   UpdateAction(type: ActionType.ConnectSocket),
+        // );
       },
       onDispose: (store) {
         print("DisConnected");
-        store.dispatch(
-          UpdateAction(type: ActionType.DisconnectSocket),
-        );
+        // store.dispatch(
+        //   UpdateAction(type: ActionType.DisconnectSocket),
+        // );
       },
       builder: (context, ModelView model) {
         return Scaffold(
@@ -121,7 +121,7 @@ class _CategoryMenuState extends State<CategoryMenu> {
                         ),
                         SizedBox(height: 10),
                         Text(
-                          "In Queue : " + model.status.toString(),
+                          "In Queue : " + model.event.length.toString(),
                           style: TextStyle(
                             fontSize: 25,
                             fontWeight: FontWeight.w500,
@@ -176,8 +176,8 @@ class BezierClipper extends CustomClipper<Path> {
   bool shouldReclip(CustomClipper<Path> oldClipper) => true;
 }
 
-Widget gridView(
-    BuildContext context, List payload, List<Color> _colorful, Map zoneNum,ModelView model,Function countZone) {
+Widget gridView(BuildContext context, List payload, List<Color> _colorful,
+    Map zoneNum, ModelView model, Function countZone) {
   var height = MediaQuery.of(context).size.height;
   return Container(
     padding: EdgeInsets.only(left: 10, right: 10, bottom: 30),
