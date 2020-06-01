@@ -14,28 +14,50 @@ const dbConfig = {
 // Functon Connect SQL SERVER
 
 const executeQuery = (query) => {
-  sql.connect(dbConfig, (err) => {
-    if (err) {
-      console.log("Error while connecting database :- " + err);
-    } else {
-      // create Request object
-      const request = new sql.Request();
-      // query to the database
-      request.query(query, (err, recordset) => {
+  return new Promise((resolve, reject) => {
+    try {
+      sql.connect(dbConfig, (err) => {
         if (err) {
-          console.log("Error while querying database :- " + err);
+          console.log("Error while connecting database :- " + err);
         } else {
-          return recordset.recordset
+          // create Request object
+          const request = new sql.Request();
+          // query to the database
+          request.query(query, (err, recordset) => {
+            if (err) {
+              console.log("Error while querying database :- " + err);
+            } else {
+              resolve(recordset.recordset);
+            }
+          });
         }
       });
+    } catch (err) {
+      reject(err);
     }
   });
 };
 
+let previusSet;
 
-const realTime(){
-    const query = "SELECT * FROM [AndonDB].[dbo].[Andon_Event] WHERE id = (select MAX(id) from [AndonDB].[dbo].[Andon_Event])";
-    const recordset = executeQuery(query);
-}
+const realTime = async () => {
+  const query =
+    "SELECT * FROM [AndonDB].[dbo].[Andon_Event] WHERE id = (select MAX(id) from [AndonDB].[dbo].[Andon_Event])";
+  let recordset = await executeQuery(query);
+  // console.log(recordset[0].id);
+  // console.log(parseInt(recordset[0].id), previusSet);
+  if (parseInt(recordset[0].id) !== previusSet) {
+    console.log("Last ID Not Seem");
+    const query =
+      "SELECT * FROM [AndonDB].[dbo].[Andon_Event] WHERE process != 'Done' ";
+    const recordsetAll = await executeQuery(query);
+    previusSet = parseInt(recordset[0].id);
+    return recordsetAll;
+  } else {
+    console.log("SEEM ID");
+  }
+};
 
-module.exports = realTime;
+module.exports = {
+  realTime,
+};

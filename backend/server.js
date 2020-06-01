@@ -29,6 +29,8 @@ server = app.listen(Port, () => {
   console.log(`BACKEND ON PORT ${Port}`);
 });
 
+const realtime = require("./realTime");
+
 // Socket io
 const io = socketIO.listen(server);
 
@@ -38,10 +40,12 @@ io.on("connection", (client) => {
   client.on("disconnect", () => {
     console.log("DisConnected");
   });
-  let data = 0;
+  let data;
   setInterval(() => {
-    data = data + 1;
-    console.log("sending");
-    client.emit("data", { data: 1 });
+    realtime.realTime().then((data) => {
+      if (data != null) {
+        client.emit("data", data);
+      }
+    });
   }, 10000);
 });

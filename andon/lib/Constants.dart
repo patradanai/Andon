@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-const baseUrl = 'http://ab843323.ngrok.io';
+const baseUrl = 'http://163.50.75.55:4900';
 
 //http://ab843323.ngrok.io
 //http://172.16.76.55:4900
