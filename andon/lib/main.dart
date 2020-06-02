@@ -40,6 +40,14 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Alarm Manager
   await AndroidAlarmManager.initialize();
+  // Notification
+  // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
+  var initializationSettingsAndroid =
+      AndroidInitializationSettings('ic_launcher');
+  var initializationSettingsIOS = IOSInitializationSettings();
+  var initializationSettings = InitializationSettings(
+      initializationSettingsAndroid, initializationSettingsIOS);
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
   // Store
   final DevToolsStore<AppState> store = DevToolsStore<AppState>(
     categoryReducer,
@@ -70,15 +78,15 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   ReceivePort port = ReceivePort();
-  Future initializeNotification() async {
-// initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
-    var initializationSettingsAndroid =
-        AndroidInitializationSettings('ic_launcher');
-    var initializationSettingsIOS = IOSInitializationSettings();
-    var initializationSettings = InitializationSettings(
-        initializationSettingsAndroid, initializationSettingsIOS);
-    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-  }
+//   Future initializeNotification() async {
+// // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
+//     var initializationSettingsAndroid =
+//         AndroidInitializationSettings('ic_launcher');
+//     var initializationSettingsIOS = IOSInitializationSettings();
+//     var initializationSettings = InitializationSettings(
+//         initializationSettingsAndroid, initializationSettingsIOS);
+//     await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+//   }
 
   initIsolate() {
     if (!IsolateNameServer.registerPortWithName(port.sendPort, portName)) {
@@ -90,7 +98,6 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    initializeNotification();
     initIsolate();
 
     AndroidAlarmManager.periodic(Duration(seconds: 5), 0, isolateFunction);
