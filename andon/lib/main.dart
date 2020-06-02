@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:isolate';
-import 'dart:convert';
+import 'dart:typed_data';
 import 'dart:ui';
 import 'package:andon/Models/categoryModel.dart';
 import 'package:flutter/material.dart';
@@ -159,13 +159,24 @@ Future isolateFunction() async {
 // SingleNotification
 Future singleNotification(String message, String subtext, int hashcode) async {
   var scheduledNotificationDateTime = DateTime.now().add(Duration(seconds: 2));
+  var vibrationPattern = Int64List(4);
+  vibrationPattern[0] = 0;
+  vibrationPattern[1] = 1000;
+  vibrationPattern[2] = 5000;
+  vibrationPattern[3] = 2000;
   var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-    'your other channel id',
-    'your other channel name',
-    'your other channel description',
-    importance: Importance.Max,
-    priority: Priority.Max,
-  );
+      'your other channel id',
+      'your other channel name',
+      'your other channel description',
+      importance: Importance.Max,
+      priority: Priority.Max,
+      vibrationPattern: vibrationPattern,
+      enableLights: true,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      color: const Color.fromARGB(255, 255, 0, 0),
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+      ledOnMs: 1000,
+      ledOffMs: 500);
   var iOSPlatformChannelSpecifics = IOSNotificationDetails();
   var platformChannel = NotificationDetails(
       androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
