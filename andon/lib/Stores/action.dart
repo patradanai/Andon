@@ -46,7 +46,7 @@ ThunkAction<CategoryModel> getCategoryAction() => (Store store) async {
       }
     };
 
-ThunkAction<EventProcess> getEventSocketAction(List data) =>
+ThunkAction<EventProcess> getSocketAction(List data) =>
     (Store store) async {
       // then parse the JSON.
       print(data);

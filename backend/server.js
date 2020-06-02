@@ -40,12 +40,22 @@ io.on("connection", (client) => {
   client.on("disconnect", () => {
     console.log("DisConnected");
   });
+  let callback;
+
+  client.on("msg", (data) => {
+    if (data === "ACK" && callback != null) {
+      console.log("Sending Socket");
+      client.emit("data", callback);
+      callback = null;
+    }
+  });
 
   setInterval(() => {
     realtime.realTime().then((data) => {
       if (data.length > 0) {
-        client.emit("data", data);
+        callback = data;
       }
     });
+    //client.emit("data", 1);
   }, 10000);
 });

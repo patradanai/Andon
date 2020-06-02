@@ -293,10 +293,16 @@ class _ProcessState extends State<Process> {
                                           myData[index].operatorCode,
                                           _timestart[myData[index].machine],
                                           myData[index].timecreated);
+                                      // Update Status
                                       await fetchUpdate(
                                           myData[index].id.toString(),
                                           "Done",
                                           barcode);
+                                      // Refresh all Data
+                                      await model.store.dispatch(getEventAction());
+                                      // Pull data and Filter
+                                      await fetchProcess(model.store.state);
+                                      _diffTime();
                                       setState(() {
                                         // Reset _stateQrCode = false
                                         _stateQrCode = false;
@@ -322,6 +328,11 @@ class _ProcessState extends State<Process> {
                                           myData[index].id.toString(),
                                           "Processing",
                                           barcode);
+                                      // Refresh all Data
+                                      await model.store.dispatch(getEventAction());
+                                      // Pull data and Filter
+                                      await fetchProcess(model.store.state);
+                                      _diffTime();
                                       setState(() {
                                         // Reset _stateQrCode = false
                                         _stateQrCode = false;

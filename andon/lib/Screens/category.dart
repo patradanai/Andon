@@ -80,8 +80,9 @@ class _CategoryMenuState extends State<CategoryMenu> {
       onInit: (store) async {
         await store.dispatch(getCategoryAction());
         await store.dispatch(getEventAction());
-        await countZone(store.state);
-
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          await countZone(store.state);
+        });
         // print("Connected SOCKET");
         // store.dispatch(
         //   UpdateAction(type: ActionType.ConnectSocket),
@@ -94,6 +95,9 @@ class _CategoryMenuState extends State<CategoryMenu> {
         // );
       },
       builder: (context, ModelView model) {
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          await countZone(model.store.state);
+        });
         return Scaffold(
           body: Container(
             height: height,

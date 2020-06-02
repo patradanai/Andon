@@ -3,20 +3,16 @@ import 'dart:isolate';
 import 'dart:typed_data';
 import 'dart:ui';
 import 'package:andon/Models/categoryModel.dart';
+import 'package:andon/Stores/action.dart';
 import 'package:flutter/material.dart';
 import 'package:andon/Screens/category.dart';
 import 'package:andon/Screens/process.dart';
 import 'package:andon/Screens/intro.dart';
 import 'package:andon/Constants.dart' as con;
 // Socket io
-// import 'package:andon/Services/app_initializer.dart';
-// import 'package:andon/Services/dependecy_injection.dart';
-import 'package:flutter_simple_dependency_injection/injector.dart';
-// import 'package:andon/Services/socketService.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 // State Management
-import 'package:andon/Stores/action.dart';
 import 'package:andon/Stores/reducers.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 // import 'package:redux/redux.dart';
@@ -29,7 +25,6 @@ import 'package:redux_dev_tools/redux_dev_tools.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:android_alarm_manager/android_alarm_manager.dart';
 
-Injector injector;
 const String portName = "portname";
 
 FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -40,14 +35,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Alarm Manager
   await AndroidAlarmManager.initialize();
-  // Notification
-  // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
-  var initializationSettingsAndroid =
-      AndroidInitializationSettings('ic_launcher');
-  var initializationSettingsIOS = IOSInitializationSettings();
-  var initializationSettings = InitializationSettings(
-      initializationSettingsAndroid, initializationSettingsIOS);
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
   // Store
   final DevToolsStore<AppState> store = DevToolsStore<AppState>(
     categoryReducer,
@@ -58,12 +45,6 @@ void main() async {
       SocketMiddleware()
     ],
   );
-  // Injector
-  // DependencyInjection().initialise(Injector.getInjector());
-  // injector = Injector.getInjector();
-  // await AppInitializer().initialise(injector);
-  //   final SocketService socketService = injector.get<SocketService>();
-  //   socketService.createSocketConnection();
   runApp(MyApp(store));
 }
 
@@ -78,15 +59,15 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   ReceivePort port = ReceivePort();
-//   Future initializeNotification() async {
-// // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
-//     var initializationSettingsAndroid =
-//         AndroidInitializationSettings('ic_launcher');
-//     var initializationSettingsIOS = IOSInitializationSettings();
-//     var initializationSettings = InitializationSettings(
-//         initializationSettingsAndroid, initializationSettingsIOS);
-//     await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-//   }
+  Future initializeNotification() async {
+    // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
+    var initializationSettingsAndroid =
+        AndroidInitializationSettings('ic_launcher');
+    var initializationSettingsIOS = IOSInitializationSettings();
+    var initializationSettings = InitializationSettings(
+        initializationSettingsAndroid, initializationSettingsIOS);
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
 
   initIsolate() {
     if (!IsolateNameServer.registerPortWithName(port.sendPort, portName)) {
@@ -98,14 +79,15 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    initializeNotification();
     initIsolate();
 
-    AndroidAlarmManager.periodic(Duration(seconds: 5), 0, isolateFunction);
+    AndroidAlarmManager.periodic(Duration(seconds: 10), 0, isolateFunction);
 
     // Listening  message from isolate
     port.listen((message) {
       widget.store.dispatch(
-        getEventSocketAction(message),
+        getSocketAction(message),
       );
     });
   }
@@ -146,26 +128,28 @@ Future isolateFunction() async {
     'transports': ['websocket'],
   });
   // socket.connect();
-  // print("IsoFunction");
+  print("IsoFunction");
   socket.on('connect', (_) => print('Connected'));
   socket.on('disconnect', (_) => print('Disconnected'));
   socket.on("data", (value) {
     data = value.toList();
-    // var payload = value;
-    // print(data[value.length - 1]);
+//     var payload = value;
+//     print(data[value.length - 1]);
+    // print(data);
     singleNotification(
         "Andon Anouncment",
         'มีการเรียกของานที่เครื่อง ${data[value.length - 1]["machine"]}',
         929102);
-
+    socket.ack(null);
     SendPort sendPort = IsolateNameServer.lookupPortByName(portName);
     sendPort?.send(data);
   });
+  socket.emit("msg", "ACK");
 }
 
 // SingleNotification
 Future singleNotification(String message, String subtext, int hashcode) async {
-  var scheduledNotificationDateTime = DateTime.now().add(Duration(seconds: 2));
+  var scheduledNotificationDateTime = DateTime.now().add(Duration(seconds: 5));
   var vibrationPattern = Int64List(4);
   vibrationPattern[0] = 0;
   vibrationPattern[1] = 1000;
