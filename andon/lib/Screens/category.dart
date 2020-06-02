@@ -28,7 +28,6 @@ class _CategoryMenuState extends State<CategoryMenu> {
   bool stateLoading = false;
   List<CategoryModel> myData;
   List<EventProcess> processData;
-  String callback;
 
   Future countZone(model) async {
     myData = model.category;
@@ -115,7 +114,7 @@ class _CategoryMenuState extends State<CategoryMenu> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Text(
-                          callback.toString(),
+                          "Working Area",
                           style: TextStyle(
                             fontSize: 45,
                             fontWeight: FontWeight.w800,

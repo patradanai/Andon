@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:isolate';
+import 'dart:convert';
 import 'dart:ui';
 import 'package:andon/Models/categoryModel.dart';
 import 'package:flutter/material.dart';
@@ -8,17 +9,17 @@ import 'package:andon/Screens/process.dart';
 import 'package:andon/Screens/intro.dart';
 import 'package:andon/Constants.dart' as con;
 // Socket io
-import 'package:andon/Services/app_initializer.dart';
-import 'package:andon/Services/dependecy_injection.dart';
+// import 'package:andon/Services/app_initializer.dart';
+// import 'package:andon/Services/dependecy_injection.dart';
 import 'package:flutter_simple_dependency_injection/injector.dart';
-import 'package:andon/Services/socketService.dart';
+// import 'package:andon/Services/socketService.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 // State Management
 import 'package:andon/Stores/action.dart';
 import 'package:andon/Stores/reducers.dart';
 import 'package:flutter_redux/flutter_redux.dart';
-import 'package:redux/redux.dart';
+// import 'package:redux/redux.dart';
 import 'package:redux_thunk/redux_thunk.dart';
 import 'package:redux_logging/redux_logging.dart';
 import 'package:andon/Stores/socketMiddleware.dart';
@@ -93,6 +94,13 @@ class _MyAppState extends State<MyApp> {
     initIsolate();
 
     AndroidAlarmManager.periodic(Duration(seconds: 5), 0, isolateFunction);
+
+    // Listening  message from isolate
+    port.listen((message) {
+      widget.store.dispatch(
+        getEventSocketAction(message),
+      );
+    });
   }
 
   @override
@@ -127,28 +135,25 @@ class _MyAppState extends State<MyApp> {
 Future isolateFunction() async {
   IO.Socket socket;
   List data;
-  // socket = IO.io(con.baseUrl, <String, dynamic>{
-  //   'transports': ['websocket'],
-  // });
+  socket = IO.io(con.baseUrl, <String, dynamic>{
+    'transports': ['websocket'],
+  });
   // socket.connect();
   // print("IsoFunction");
-  // socket.on('connect', (_) => print('Connected'));
-  // socket.on('disconnect', (_) => print('Disconnected'));
-  // socket.on("data", (value) {
-  //   data = value.toList();
-  //   // var payload = value;
-  //   // print(data);
-  //   // print(data[value.length - 1]);
-  //   singleNotification(
-  //       "Andon Anouncment",
-  //       'มีการเรียกของานที่เครื่อง ${data[value.length - 1]["machine"]}',
-  //       929102);
+  socket.on('connect', (_) => print('Connected'));
+  socket.on('disconnect', (_) => print('Disconnected'));
+  socket.on("data", (value) {
+    data = value.toList();
+    // var payload = value;
+    // print(data[value.length - 1]);
+    singleNotification(
+        "Andon Anouncment",
+        'มีการเรียกของานที่เครื่อง ${data[value.length - 1]["machine"]}',
+        929102);
 
-  SendPort sendPort = IsolateNameServer.lookupPortByName(portName);
-  String test = "WTF";
-  print("ISOLATE");
-  sendPort?.send(test);
-  // });
+    SendPort sendPort = IsolateNameServer.lookupPortByName(portName);
+    sendPort?.send(data);
+  });
 }
 
 // SingleNotification
@@ -166,4 +171,10 @@ Future singleNotification(String message, String subtext, int hashcode) async {
       androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
   await flutterLocalNotificationsPlugin.schedule(hashcode, message, subtext,
       scheduledNotificationDateTime, platformChannel);
+}
+
+class UpdateAction {
+  ActionType type;
+  dynamic message;
+  UpdateAction({this.type, this.message});
 }

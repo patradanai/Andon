@@ -15,7 +15,8 @@ class _IntroState extends State<Intro> {
   }
 
   route() {
-    Navigator.push(
+    // Remove This Splash Screen
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (context) {

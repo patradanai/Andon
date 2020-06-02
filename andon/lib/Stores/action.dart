@@ -46,6 +46,20 @@ ThunkAction<CategoryModel> getCategoryAction() => (Store store) async {
       }
     };
 
+ThunkAction<EventProcess> getEventSocketAction(List data) =>
+    (Store store) async {
+      // then parse the JSON.
+      print(data);
+      List<EventProcess> payload = [];
+      for (var i in data) {
+        EventProcess eventProcess = EventProcess.fromJson(i);
+        if (eventProcess.process != 'Done') {
+          payload.add(eventProcess);
+        }
+      }
+      store.dispatch(UpdateAction(type: ActionType.EventAPI, message: payload));
+    };
+
 class UpdateAction {
   ActionType type;
   dynamic message;
