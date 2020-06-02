@@ -172,18 +172,21 @@ Future singleNotification(String message, String subtext, int hashcode) async {
   vibrationPattern[2] = 5000;
   vibrationPattern[3] = 2000;
   var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      'your other channel id',
-      'your other channel name',
-      'your other channel description',
-      importance: Importance.Max,
-      priority: Priority.Max,
-      vibrationPattern: vibrationPattern,
-      enableLights: true,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
-      color: const Color.fromARGB(255, 255, 0, 0),
-      ledColor: const Color.fromARGB(255, 255, 0, 0),
-      ledOnMs: 1000,
-      ledOffMs: 500);
+    'your other channel id',
+    'your other channel name',
+    'your other channel description',
+    importance: Importance.Max,
+    priority: Priority.Max,
+    vibrationPattern: vibrationPattern,
+    enableLights: true,
+    icon: 'secondary_icon',
+    sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+    largeIcon: DrawableResourceAndroidBitmap('secondary_icon'),
+    color: const Color.fromARGB(255, 255, 0, 0),
+    ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ledOnMs: 1000,
+    ledOffMs: 500,
+  );
   var iOSPlatformChannelSpecifics = IOSNotificationDetails();
   var platformChannel = NotificationDetails(
       androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
