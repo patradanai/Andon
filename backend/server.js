@@ -16,9 +16,9 @@ app.get("/", (req, res) => {
 });
 
 // Category
-const category = require("./api/category");
+const machine = require("./api/machine");
 
-app.use("/api/category", category);
+app.use("/api/machine", machine);
 
 // Process
 const eventProcess = require("./api/eventProcess");
