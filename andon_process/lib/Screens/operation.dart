@@ -1,7 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:andon_process/Widgets/cardProcess.dart';
 import 'package:barcode_scan/barcode_scan.dart';
 import 'package:flutter/services.dart';
+import 'package:andon_process/Widgets/cardDialog.dart';
+import 'package:http/http.dart' as http;
+import 'package:andon_process/content.dart' as Constant;
+import 'package:andon_process/Models/fetchApi.dart';
 
 class Operation extends StatefulWidget {
   static String routeName = 'Operation';
@@ -11,21 +16,19 @@ class Operation extends StatefulWidget {
 
 class _OperationState extends State<Operation> {
   var barcode;
-  TextEditingController c = new TextEditingController();
   var options = ScanOptions(
     autoEnableFlash: false,
     android: AndroidOptions(
       aspectTolerance: 0.00,
       useAutoFocus: true,
-    ),);
-
+    ),
+  );
 
   Future scan() async {
     try {
       var barcode = await BarcodeScanner.scan(options: options);
-      setState((){
+      setState(() {
         this.barcode = barcode;
-        c.text = barcode.toString();
       });
     } on PlatformException catch (e) {
       if (e.code == BarcodeScanner.cameraAccessDenied) {
@@ -39,6 +42,49 @@ class _OperationState extends State<Operation> {
       // Unknown error.
     }
   }
+
+  // Future Dialog EndJob
+  Future _dialogEndJob(Function accept, Function cancel) async {
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return Center(
+          child: DialogContent(
+            title: "ต้องการเรียกนักบิน?",
+            des: "กด Accept เพื่อที่จะทำการ SCAN QR CODE",
+            accept: accept,
+            cancel: cancel,
+          ),
+        );
+      },
+    );
+  }
+
+  void fetchData() async {
+    var url = Constant.url + '/api/machine/';
+    var response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      var list = json.decode(response.body);
+      List<ModelMachine> payload = [];
+      for (var i in list) {
+        ModelMachine data = ModelMachine.fromJson(i);
+        payload.add(data);
+      }
+      print(payload);
+      // return payload;
+    } else {
+      print("Error Fetch API");
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    fetchData();
+  }
+
   @override
   Widget build(BuildContext context) {
     List<Widget> title = [
@@ -114,14 +160,30 @@ class _OperationState extends State<Operation> {
                   color: Color(0xFFB2FF59),
                   operation: "เปลี่ยนล็อต",
                   pressButton: () async {
-                    await scan();
-                    print(barcode.rawContent);
+                    await _dialogEndJob(
+                      () {
+                        Navigator.pop(context);
+                        Future.delayed(Duration(milliseconds: 500), () {});
+                        scan();
+                        print(barcode.rawContent);
+                      },
+                      () {
+                        Navigator.pop(context);
+                      },
+                    );
                   },
                 ),
                 CardProcess(
                   color: Color(0xFFB2FF59),
                   operation: "เติ่มคาสเช็ท",
-                  pressButton: () {},
+                  pressButton: () {
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(
+                    //     builder: (context) => CameraScan(),
+                    //   ),
+                    // );
+                  },
                 ),
                 Text("3"),
                 Text("4"),
