@@ -16,8 +16,10 @@ class Operation extends StatefulWidget {
 
 class _OperationState extends State<Operation> {
   var barcode;
-  var isLoading = false;
+  bool isLoadingTitle = false;
+  bool isLoadingRequest = false;
   List<Widget> titleHeader = [];
+  List<Widget> requestName = [];
   var options = ScanOptions(
     autoEnableFlash: false,
     android: AndroidOptions(
@@ -72,24 +74,7 @@ class _OperationState extends State<Operation> {
       for (var i in list) {
         ModelMachine data = ModelMachine.fromJson(i);
         payload.add(data);
-
-        // titleHeader.add(
-        // Container(
-        //   height: double.infinity,
-        //   child: Tab(
-        //     child: Text(
-        //       data.name,
-        //       style: TextStyle(
-        //         fontSize: 30,
-        //       ),
-        //     ),
-        //   ),
-        // ),
-        // );
       }
-      // setState(() {
-      //   isLoading = true;
-      // });
       return payload;
     } else {
       print("Error Fetch API");
@@ -102,6 +87,13 @@ class _OperationState extends State<Operation> {
 
     if (response.statusCode == 200) {
       var list = json.decode(response.body);
+      List<ModelRequest> payload = [];
+
+      for (var i in list) {
+        ModelRequest data = ModelRequest.fromJson(i);
+        payload.add(data);
+      }
+      return payload;
     } else {
       print("Error Fetch API");
     }
@@ -129,7 +121,18 @@ class _OperationState extends State<Operation> {
           );
         }
         setState(() {
-          isLoading = true;
+          isLoadingTitle = true;
+        });
+      },
+    );
+
+    fetchRequest().then(
+      (value) {
+        setState(() {
+          requestName = value;
+        });
+        setState(() {
+          isLoadingRequest = true;
         });
       },
     );
@@ -137,7 +140,7 @@ class _OperationState extends State<Operation> {
 
   @override
   Widget build(BuildContext context) {
-    return isLoading
+    return isLoadingTitle
         ? MaterialApp(
             home: DefaultTabController(
             length: 4,

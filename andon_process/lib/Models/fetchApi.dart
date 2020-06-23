@@ -11,3 +11,17 @@ class ModelMachine {
     );
   }
 }
+
+class ModelRequest {
+  final String machine;
+  final String request;
+
+  ModelRequest({this.machine, this.request});
+
+  factory ModelRequest.fromJson(Map<String, dynamic> json) {
+    return ModelRequest(
+      machine: json['machine'],
+      request: json['request'],
+    );
+  }
+}
