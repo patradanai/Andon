@@ -18,7 +18,7 @@ class Operation extends StatefulWidget {
 class _OperationState extends State<Operation> {
   var barcodeScan;
   String msgEvent = "Comparing Data";
-  bool isEvent = true;
+  bool isEvent = false;
   bool isLoadingTitle = false;
   bool isLoadingRequest = false;
   List<Widget> titleHeader = [];
@@ -163,44 +163,59 @@ class _OperationState extends State<Operation> {
         // Fetch RequestName After get machine Name
         fetchRequest().then(
           (requestValue) {
-            for (var i in dataValue) {
-              List<Widget> subName = [];
-              for (var y in requestValue) {
-                if (y.machine == i.name) {
-                  subName.add(
-                    CardProcess(
-                      color: Color(0xFFB2FF59),
-                      operation: y.request,
-                      pressButton: () async {
-                        await _dialogEndJob(
-                          () {
-                            Navigator.pop(context);
-                            Future.delayed(Duration(milliseconds: 500), () {});
+            // Fetch Model Name
 
-                            // Await ScanQRCODE
-                            // scan().then((value) {});
-                            _dialogLoading();
-                          },
-                          () {
-                            Navigator.pop(context);
-                          },
-                        );
-                      },
+            fetchModel().then((fetchvalue) {
+              for (var i in dataValue) {
+                List<Widget> subName = [];
+                for (var y in requestValue) {
+                  if (y.machine == i.name) {
+                    subName.add(
+                      CardProcess(
+                        color: Color(0xFFB2FF59),
+                        operation: y.request,
+                        pressButton: () async {
+                          await _dialogEndJob(
+                            () {
+                              Navigator.pop(context);
+                              Future.delayed(
+                                  Duration(milliseconds: 500), () {});
+                              print(i.name);
+
+                              // Await ScanQRCODE
+                              scan().then((value) {
+                                for (var data in y.model) {
+                                  // Machine name in Database
+                                  if (data == value) {
+                                    // Matching Request and Process
+                                    // if (y.machine == )
+
+                                  }
+                                }
+                              });
+                              // _dialogLoading();
+                            },
+                            () {
+                              Navigator.pop(context);
+                            },
+                          );
+                        },
+                      ),
+                    );
+                  }
+                }
+                // Add In RequestName
+                if (subName.length > 0) {
+                  requestName.add(
+                    ListView(
+                      children: subName,
                     ),
                   );
+                } else {
+                  requestName.add(Container());
                 }
               }
-              // Add In RequestName
-              if (subName.length > 0) {
-                requestName.add(
-                  ListView(
-                    children: subName,
-                  ),
-                );
-              } else {
-                requestName.add(Container());
-              }
-            }
+            });
             setState(() {
               isLoadingRequest = true;
             });
@@ -211,10 +226,6 @@ class _OperationState extends State<Operation> {
         });
       },
     );
-
-    // Fetch Model Name
-
-    fetchModel().then((value) => modelAll = value);
   }
 
   @override
