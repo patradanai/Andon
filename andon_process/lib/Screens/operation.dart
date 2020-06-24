@@ -15,7 +15,7 @@ class Operation extends StatefulWidget {
 }
 
 class _OperationState extends State<Operation> {
-  var barcode;
+  var barcodeScan;
   bool isLoadingTitle = false;
   bool isLoadingRequest = false;
   List<Widget> titleHeader = [];
@@ -31,9 +31,11 @@ class _OperationState extends State<Operation> {
   Future scan() async {
     try {
       var barcode = await BarcodeScanner.scan(options: options);
+      print(barcode.rawContent.toString());
       setState(() {
-        this.barcode = barcode;
+        barcodeScan = barcode.rawContent.toString();
       });
+      return barcode.rawContent.toString();
     } on PlatformException catch (e) {
       if (e.code == BarcodeScanner.cameraAccessDenied) {
         // The user did not grant the camera permission.
@@ -120,13 +122,14 @@ class _OperationState extends State<Operation> {
             ),
           );
         }
+
+        // Fetch RequestName After get machine Name
         fetchRequest().then(
           (requestValue) {
             for (var i in dataValue) {
               List<Widget> subName = [];
               for (var y in requestValue) {
                 if (y.machine == i.name) {
-                  print(y.request);
                   subName.add(
                     CardProcess(
                       color: Color(0xFFB2FF59),
@@ -136,8 +139,9 @@ class _OperationState extends State<Operation> {
                           () {
                             Navigator.pop(context);
                             Future.delayed(Duration(milliseconds: 500), () {});
-                            scan();
-                            print(barcode.rawContent);
+
+                            // Await ScanQRCODE
+                            scan().then((value) {});
                           },
                           () {
                             Navigator.pop(context);
@@ -148,7 +152,6 @@ class _OperationState extends State<Operation> {
                   );
                 }
               }
-              print(subName.length);
               // Add In RequestName
               if (subName.length > 0) {
                 requestName.add(
@@ -163,7 +166,6 @@ class _OperationState extends State<Operation> {
             setState(() {
               isLoadingRequest = true;
             });
-            print(requestName);
           },
         );
         setState(() {
@@ -178,7 +180,7 @@ class _OperationState extends State<Operation> {
     return isLoadingTitle && isLoadingRequest
         ? MaterialApp(
             home: DefaultTabController(
-            length: 4,
+            length: titleHeader.length,
             child: Scaffold(
               appBar: PreferredSize(
                 preferredSize: Size.fromHeight(150.0),

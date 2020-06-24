@@ -25,3 +25,19 @@ class ModelRequest {
     );
   }
 }
+
+class ModelName {
+  final String machine;
+  final String model;
+  final String fname;
+
+  ModelName({this.machine, this.model, this.fname});
+
+  factory ModelName.fromJson(Map<String, dynamic> json) {
+    return ModelName(
+      machine: json['machine'],
+      model: json['model'],
+      fname: json['Combine'],
+    );
+  }
+}
