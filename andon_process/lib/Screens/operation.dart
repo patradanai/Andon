@@ -104,8 +104,8 @@ class _OperationState extends State<Operation> {
     super.initState();
 
     fetchData().then(
-      (value) {
-        for (var i in value) {
+      (dataValue) {
+        for (var i in dataValue) {
           titleHeader.add(
             Container(
               height: double.infinity,
@@ -120,19 +120,54 @@ class _OperationState extends State<Operation> {
             ),
           );
         }
+        fetchRequest().then(
+          (requestValue) {
+            for (var i in dataValue) {
+              List<Widget> subName = [];
+              for (var y in requestValue) {
+                if (y.machine == i.name) {
+                  print(y.request);
+                  subName.add(
+                    CardProcess(
+                      color: Color(0xFFB2FF59),
+                      operation: y.request,
+                      pressButton: () async {
+                        await _dialogEndJob(
+                          () {
+                            Navigator.pop(context);
+                            Future.delayed(Duration(milliseconds: 500), () {});
+                            scan();
+                            print(barcode.rawContent);
+                          },
+                          () {
+                            Navigator.pop(context);
+                          },
+                        );
+                      },
+                    ),
+                  );
+                }
+              }
+              print(subName.length);
+              // Add In RequestName
+              if (subName.length > 0) {
+                requestName.add(
+                  ListView(
+                    children: subName,
+                  ),
+                );
+              } else {
+                requestName.add(Container());
+              }
+            }
+            setState(() {
+              isLoadingRequest = true;
+            });
+            print(requestName);
+          },
+        );
         setState(() {
           isLoadingTitle = true;
-        });
-      },
-    );
-
-    fetchRequest().then(
-      (value) {
-        setState(() {
-          requestName = value;
-        });
-        setState(() {
-          isLoadingRequest = true;
         });
       },
     );
@@ -140,7 +175,7 @@ class _OperationState extends State<Operation> {
 
   @override
   Widget build(BuildContext context) {
-    return isLoadingTitle
+    return isLoadingTitle && isLoadingRequest
         ? MaterialApp(
             home: DefaultTabController(
             length: 4,
@@ -171,49 +206,7 @@ class _OperationState extends State<Operation> {
                   ),
                 ),
               ),
-              body: TabBarView(
-                children: <Widget>[
-                  ListView(
-                    children: <Widget>[
-                      CardProcess(
-                        color: Color(0xFFB2FF59),
-                        operation: "เปลี่ยนล็อต",
-                        pressButton: () async {
-                          await _dialogEndJob(
-                            () {
-                              Navigator.pop(context);
-                              Future.delayed(
-                                  Duration(milliseconds: 500), () {});
-                              scan();
-                              print(barcode.rawContent);
-                            },
-                            () {
-                              Navigator.pop(context);
-                            },
-                          );
-                        },
-                      ),
-                      CardProcess(
-                        color: Color(0xFFB2FF59),
-                        operation: "เติ่มคาสเช็ท",
-                        pressButton: () {
-                          // Navigator.push(
-                          //   context,
-                          //   MaterialPageRoute(
-                          //     builder: (context) => CameraScan(),
-                          //   ),
-                          // );
-                        },
-                      ),
-                      Text("3"),
-                      Text("4"),
-                    ],
-                  ),
-                  Text("2"),
-                  Text("3"),
-                  Text("4"),
-                ],
-              ),
+              body: TabBarView(children: requestName),
             ),
           ))
         : Container(
