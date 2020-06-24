@@ -7,6 +7,7 @@ import 'package:andon_process/Widgets/cardDialog.dart';
 import 'package:http/http.dart' as http;
 import 'package:andon_process/content.dart' as Constant;
 import 'package:andon_process/Models/fetchApi.dart';
+import 'package:andon_process/Widgets/cardDialogLoading.dart';
 
 class Operation extends StatefulWidget {
   static String routeName = 'Operation';
@@ -16,10 +17,13 @@ class Operation extends StatefulWidget {
 
 class _OperationState extends State<Operation> {
   var barcodeScan;
+  String msgEvent = "Comparing Data";
+  bool isEvent = true;
   bool isLoadingTitle = false;
   bool isLoadingRequest = false;
   List<Widget> titleHeader = [];
   List<Widget> requestName = [];
+  List<ModelName> modelAll = [];
   var options = ScanOptions(
     autoEnableFlash: false,
     android: AndroidOptions(
@@ -47,6 +51,21 @@ class _OperationState extends State<Operation> {
     } catch (e) {
       // Unknown error.
     }
+  }
+
+  Future _dialogLoading() async {
+    await showDialog(
+      barrierDismissible: isEvent,
+      context: context,
+      builder: (context) {
+        return Center(
+          child: DialogLoading(
+            des: msgEvent,
+            status: !isEvent,
+          ),
+        );
+      },
+    );
   }
 
   // Future Dialog EndJob
@@ -101,6 +120,24 @@ class _OperationState extends State<Operation> {
     }
   }
 
+  Future fetchModel() async {
+    var url = Constant.url + '/api/machine/name';
+    var response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      var list = json.decode(response.body);
+      List<ModelName> payload = [];
+
+      for (var i in list) {
+        ModelName data = ModelName.fromJson(i);
+        payload.add(data);
+      }
+      return payload;
+    } else {
+      print("Error Fetech API");
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -141,7 +178,8 @@ class _OperationState extends State<Operation> {
                             Future.delayed(Duration(milliseconds: 500), () {});
 
                             // Await ScanQRCODE
-                            scan().then((value) {});
+                            // scan().then((value) {});
+                            _dialogLoading();
                           },
                           () {
                             Navigator.pop(context);
@@ -173,6 +211,10 @@ class _OperationState extends State<Operation> {
         });
       },
     );
+
+    // Fetch Model Name
+
+    fetchModel().then((value) => modelAll = value);
   }
 
   @override
