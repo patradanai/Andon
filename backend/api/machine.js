@@ -37,12 +37,13 @@ const executeQuery = (res, query) => {
 };
 
 router.get("/", (req, res) => {
-  console.log("Fetch GET");
+  console.log("Fetch GET All Machine");
   const query = "SELECT * from [machine]";
   executeQuery(res, query);
 });
 
 router.get("/name", (req, res) => {
+  console.log("Fetch GET Name");
   const query =
     "SELECT a.machine,b.model,a.machine + '_' + b.model as Combine \
         from machine a \
@@ -51,7 +52,7 @@ router.get("/name", (req, res) => {
 });
 
 router.get("/request", (req, res) => {
-  console.log("Fetch GET");
+  console.log("Fetch GET Request");
   const query =
     "SELECT m.machine,r.request \
                     from request r\
@@ -60,11 +61,25 @@ router.get("/request", (req, res) => {
 });
 
 router.get("/zone", (req, res) => {
-  console.log("Fetch GET");
+  console.log("Fetch GET Zone");
   const query =
     "SELECT m.machine,z.zone \
                   from zone z\
                     inner join machine m on z.machineId = m.machineId";
+  executeQuery(res, query);
+});
+
+router.post("/event", (req, res) => {
+  const body = req.body;
+  console.log("Payload Post Event");
+  const query = `INSERT event \ 
+                (modelId, requestId, operatorCode, status, created) \
+                VALUES ((select id from model m where m.model = '${body.model}' \ 
+                and m.machineId = (select requestId from request where request LIKE N'${body.request}')), \
+                (select requestId from request where request LIKE N'${body.request}'),\
+                '${body.operatorCode}', \
+                '${body.status}', \
+                '${body.timeCreated}')`;
   executeQuery(res, query);
 });
 
