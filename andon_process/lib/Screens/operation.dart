@@ -18,12 +18,16 @@ class Operation extends StatefulWidget {
 class _OperationState extends State<Operation> {
   var barcodeScan;
   String msgEvent = "Comparing Data";
+  Icon icon;
   bool isEvent = false;
   bool isLoadingTitle = false;
   bool isLoadingRequest = false;
+  bool isLoadingModel = false;
   List<Widget> titleHeader = [];
-  List<Widget> requestName = [];
   List<ModelName> modelAll = [];
+  List<ModelMachine> modelMachine = [];
+  List<ModelName> modelName = [];
+  List<ModelRequest> modelRequest = [];
   var options = ScanOptions(
     autoEnableFlash: false,
     android: AndroidOptions(
@@ -34,12 +38,16 @@ class _OperationState extends State<Operation> {
 
   Future scan() async {
     try {
-      var barcode = await BarcodeScanner.scan(options: options);
-      print(barcode.rawContent.toString());
+      var result = await BarcodeScanner.scan(options: options);
+      print(result.type); // The result type (barcode, cancelled, failed)
+      print(result.rawContent); // The barcode content
+      print(result.format); // The barcode format (as enum)
+      print(result
+          .formatNote); // If a unknown format was scanned this field contains a note
       setState(() {
-        barcodeScan = barcode.rawContent.toString();
+        barcodeScan = result.rawContent.toString();
       });
-      return barcode.rawContent.toString();
+      return result.rawContent.toString();
     } on PlatformException catch (e) {
       if (e.code == BarcodeScanner.cameraAccessDenied) {
         // The user did not grant the camera permission.
@@ -62,6 +70,7 @@ class _OperationState extends State<Operation> {
           child: DialogLoading(
             des: msgEvent,
             status: !isEvent,
+            icon: icon,
           ),
         );
       },
@@ -164,64 +173,24 @@ class _OperationState extends State<Operation> {
         fetchRequest().then(
           (requestValue) {
             // Fetch Model Name
-
-            fetchModel().then((fetchvalue) {
-              for (var i in dataValue) {
-                List<Widget> subName = [];
-                for (var y in requestValue) {
-                  if (y.machine == i.name) {
-                    subName.add(
-                      CardProcess(
-                        color: Color(0xFFB2FF59),
-                        operation: y.request,
-                        pressButton: () async {
-                          await _dialogEndJob(
-                            () {
-                              Navigator.pop(context);
-                              Future.delayed(
-                                  Duration(milliseconds: 500), () {});
-                              print(i.name);
-
-                              // Await ScanQRCODE
-                              scan().then((value) {
-                                for (var data in y.model) {
-                                  // Machine name in Database
-                                  if (data == value) {
-                                    // Matching Request and Process
-                                    // if (y.machine == )
-
-                                  }
-                                }
-                              });
-                              // _dialogLoading();
-                            },
-                            () {
-                              Navigator.pop(context);
-                            },
-                          );
-                        },
-                      ),
-                    );
-                  }
-                }
-                // Add In RequestName
-                if (subName.length > 0) {
-                  requestName.add(
-                    ListView(
-                      children: subName,
-                    ),
-                  );
-                } else {
-                  requestName.add(Container());
-                }
-              }
-            });
+            fetchModel().then(
+              (fetchvalue) {
+                setState(
+                  () {
+                    modelName = fetchvalue;
+                    isLoadingModel = true;
+                  },
+                );
+              },
+            );
             setState(() {
+              modelRequest = requestValue;
               isLoadingRequest = true;
             });
           },
         );
         setState(() {
+          modelMachine = dataValue;
           isLoadingTitle = true;
         });
       },
@@ -230,7 +199,7 @@ class _OperationState extends State<Operation> {
 
   @override
   Widget build(BuildContext context) {
-    return isLoadingTitle && isLoadingRequest
+    return isLoadingTitle && isLoadingRequest && isLoadingModel
         ? MaterialApp(
             home: DefaultTabController(
             length: titleHeader.length,
@@ -261,7 +230,96 @@ class _OperationState extends State<Operation> {
                   ),
                 ),
               ),
-              body: TabBarView(children: requestName),
+              body: TabBarView(
+                children: List<Widget>.generate(
+                  4,
+                  (index) {
+                    List<Widget> requestName = [];
+                    for (var i in modelMachine) {
+                      List<Widget> subName = [];
+                      for (var y in modelRequest) {
+                        if (y.machine == i.name) {
+                          // Addition Name in List Tab
+                          subName.add(
+                            CardProcess(
+                              color: Color(0xFFB2FF59),
+                              operation: y.request,
+                              pressButton: () async {
+                                await _dialogEndJob(
+                                  () async {
+                                    Navigator.pop(context);
+                                    Future.delayed(
+                                        Duration(milliseconds: 500), () {});
+
+                                    // Await ScanQRCODE
+                                    await scan();
+                                    for (var data in modelName) {
+                                      // Machine name in Database
+                                      if (data.fname == barcodeScan) {
+                                        // Matching Request and Process
+                                        if (y.machine == data.machine) {
+                                          setState(() {
+                                            msgEvent = "สำเร็จ";
+                                            isEvent = true;
+                                            icon = Icon(
+                                              Icons.check_circle_outline,
+                                              color: Colors.greenAccent,
+                                              size: 120,
+                                            );
+                                          });
+                                        } else {
+                                          setState(() {
+                                            msgEvent =
+                                                "ข้อมูลการเรียกไม่ตรงกับ Process";
+                                            isEvent = true;
+                                            icon = Icon(
+                                              Icons.highlight_off,
+                                              color: Colors.red,
+                                              size: 120,
+                                            );
+                                          });
+                                        }
+                                      } else {
+                                        setState(() {
+                                          msgEvent =
+                                              "ไม่มีรายชื่อเครื่องในฐานข้อมูล";
+                                          isEvent = true;
+                                          icon = Icon(
+                                            Icons.highlight_off,
+                                            color: Colors.red,
+                                            size: 120,
+                                          );
+                                        });
+                                      }
+                                    }
+
+                                    // Loading Fetching Data
+                                    _dialogLoading();
+                                  },
+                                  () {
+                                    Navigator.pop(context);
+                                  },
+                                );
+                              },
+                            ),
+                          );
+                        }
+                      }
+                      // Add In RequestName
+                      if (subName.length > 0) {
+                        requestName.add(
+                          ListView(
+                            children: subName,
+                          ),
+                        );
+                      } else {
+                        requestName.add(Container());
+                      }
+                    }
+                    return requestName[index];
+                  },
+                ),
+              ),
             ),
           ))
         : Container(

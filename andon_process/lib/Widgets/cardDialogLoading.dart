@@ -3,18 +3,20 @@ import 'package:flutter/material.dart';
 class DialogLoading extends StatelessWidget {
   final String des;
   final bool status;
-  DialogLoading({this.des, this.status});
+  final Icon icon;
+  DialogLoading({this.des, this.status, this.icon});
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: <Widget>[
-        contentCard(context, des, status),
+        contentCard(context, des, status, icon),
       ],
     );
   }
 }
 
-Widget contentCard(BuildContext context, String description, bool status) {
+Widget contentCard(
+    BuildContext context, String description, bool status, Icon icon) {
   return Container(
     constraints: BoxConstraints(minHeight: 300, minWidth: 400),
     padding: EdgeInsets.only(
@@ -40,13 +42,7 @@ Widget contentCard(BuildContext context, String description, bool status) {
       mainAxisSize: MainAxisSize.min, // To make the card compact
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: <Widget>[
-        status
-            ? CircularProgressIndicator()
-            : Icon(
-                Icons.check_circle_outline,
-                color: Colors.greenAccent,
-                size: 120,
-              ),
+        status ? CircularProgressIndicator() : icon,
         Material(
           type: MaterialType.transparency,
           child: Text(
