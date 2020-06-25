@@ -72,7 +72,7 @@ router.get("/zone", (req, res) => {
 router.post("/event", (req, res) => {
   const body = req.body;
   console.log("Payload Post Event");
-  const query = `INSERT event \ 
+  const query = `INSERT eventView \ 
                 (modelId, requestId, operatorCode, status, created) \
                 VALUES ((select id from model m where m.model = '${body.model}' \ 
                 and m.machineId = (select requestId from request where request LIKE N'${body.request}')), \
@@ -80,6 +80,14 @@ router.post("/event", (req, res) => {
                 '${body.operatorCode}', \
                 '${body.status}', \
                 '${body.timeCreated}')`;
+  executeQuery(res, query);
+});
+
+router.post("/eventUpdate", (req, res) => {
+  const body = req.body;
+  console.log("Payloa Updat");
+  const query = `UPDATE eventView SET operatorCode = ${body.operator}, \
+                    status = ${body.status} where eventId = ${body.eventId}`;
   executeQuery(res, query);
 });
 
