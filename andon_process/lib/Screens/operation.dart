@@ -62,37 +62,73 @@ class _OperationState extends State<Operation> {
   }
 
   Future _dialogLoading() async {
-    await showDialog(
-      barrierDismissible: isEvent,
-      context: context,
-      builder: (context) {
-        return Center(
-          child: DialogLoading(
-            des: msgEvent,
-            status: !isEvent,
-            icon: icon,
-          ),
+    await showGeneralDialog(
+      barrierColor: Colors.black.withOpacity(0.5),
+      transitionBuilder: (context, a1, a2, widget) {
+        return Transform.scale(
+          scale: a1.value,
+          child: Opacity(
+              opacity: a1.value,
+              child: Center(
+                child: DialogLoading(
+                  des: msgEvent,
+                  status: !isEvent,
+                  icon: icon,
+                ),
+              )),
         );
       },
+      transitionDuration: Duration(milliseconds: 200),
+      barrierDismissible: true,
+      barrierLabel: '',
+      context: context,
+      pageBuilder: (context, animation1, animation2) {},
     );
   }
 
+  // Center(
+  //         child: DialogLoading(
+  //           des: msgEvent,
+  //           status: !isEvent,
+  //           icon: icon,
+  //         ),
+  //       );
+
   // Future Dialog EndJob
   Future _dialogEndJob(Function accept, Function cancel) async {
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return Center(
-          child: DialogContent(
-            title: "ต้องการเรียกนักบิน?",
-            des: "กด Accept เพื่อที่จะทำการ SCAN QR CODE",
-            accept: accept,
-            cancel: cancel,
-          ),
+    await showGeneralDialog(
+      barrierColor: Colors.black.withOpacity(0.5),
+      transitionBuilder: (context, a1, a2, widget) {
+        return Transform.scale(
+          scale: a1.value,
+          child: Opacity(
+              opacity: a1.value,
+              child: Center(
+                child: DialogContent(
+                  title: "ต้องการเรียกนักบิน?",
+                  des: "กด Accept เพื่อที่จะทำการ SCAN QR CODE",
+                  accept: accept,
+                  cancel: cancel,
+                ),
+              )),
         );
       },
+      transitionDuration: Duration(milliseconds: 200),
+      barrierDismissible: true,
+      barrierLabel: '',
+      context: context,
+      pageBuilder: (context, animation1, animation2) {},
     );
   }
+
+  // Center(
+  //         child: DialogContent(
+  //           title: "ต้องการเรียกนักบิน?",
+  //           des: "กด Accept เพื่อที่จะทำการ SCAN QR CODE",
+  //           accept: accept,
+  //           cancel: cancel,
+  //         ),
+  //       );
 
   Future fetchData() async {
     var url = Constant.url + '/api/machine/';
@@ -253,7 +289,9 @@ class _OperationState extends State<Operation> {
 
                                     // Await ScanQRCODE
                                     await scan();
+
                                     for (var data in modelName) {
+                                      print(data.fname);
                                       // Machine name in Database
                                       if (data.fname == barcodeScan) {
                                         // Matching Request and Process
@@ -279,22 +317,11 @@ class _OperationState extends State<Operation> {
                                             );
                                           });
                                         }
-                                      } else {
-                                        setState(() {
-                                          msgEvent =
-                                              "ไม่มีรายชื่อเครื่องในฐานข้อมูล";
-                                          isEvent = true;
-                                          icon = Icon(
-                                            Icons.highlight_off,
-                                            color: Colors.red,
-                                            size: 120,
-                                          );
-                                        });
                                       }
                                     }
-
+                                    Future.delayed(Duration(seconds: 1), () {});
                                     // Loading Fetching Data
-                                    _dialogLoading();
+                                    await _dialogLoading();
                                   },
                                   () {
                                     Navigator.pop(context);
