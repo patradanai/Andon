@@ -304,7 +304,11 @@ class _OperationState extends State<Operation> {
                           // Addition Name in List Tab
                           subName.add(
                             CardProcess(
-                              color: Color(0xFFB2FF59),
+                              color: i.id == 1
+                                  ? Color(0xFFCCFF90)
+                                  : i.id == 2
+                                      ? Color(0xFFFFEB3B)
+                                      : Color(0xFFF48FB1),
                               operation: y.request,
                               pressButton: () async {
                                 await _dialogEndJob(
