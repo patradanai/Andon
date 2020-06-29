@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:andon_process/Widgets/cardProcess.dart';
 import 'package:barcode_scan/barcode_scan.dart';
@@ -8,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:andon_process/content.dart' as Constant;
 import 'package:andon_process/Models/fetchApi.dart';
 import 'package:andon_process/Widgets/cardDialogLoading.dart';
+import 'package:intl/intl.dart';
 
 class Operation extends StatefulWidget {
   static String routeName = 'Operation';
@@ -183,6 +185,30 @@ class _OperationState extends State<Operation> {
     }
   }
 
+  Future payloadEvent(String modelId, String status, String request) async {
+    var url = Constant.url + "/api/machine/event";
+    var response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(
+        <String, dynamic>{
+          "model": modelId.toString(),
+          "status": status.toString(),
+          "request": request.toString(),
+          "timeCreated": DateFormat.yMd().add_jm().format(
+                DateTime.now(),
+              )
+        },
+      ),
+      encoding: Encoding.getByName('utf-8'),
+    );
+
+    if (response.statusCode == 200) {
+    } else {
+      throw Exception('Failed to load');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -296,6 +322,11 @@ class _OperationState extends State<Operation> {
                                       if (data.fname == barcodeScan) {
                                         // Matching Request and Process
                                         if (y.machine == data.machine) {
+                                          await payloadEvent(
+                                            data.model,
+                                            "Waiting",
+                                            y.request,
+                                          );
                                           setState(() {
                                             msgEvent = "สำเร็จ";
                                             isEvent = true;

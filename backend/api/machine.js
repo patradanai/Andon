@@ -77,15 +77,16 @@ router.post("/event", (req, res) => {
                 VALUES ((select id from model m where m.model = '${body.model}' \ 
                 and m.machineId = (select requestId from request where request LIKE N'${body.request}')), \
                 (select requestId from request where request LIKE N'${body.request}'),\
-                '${body.operatorCode}', \
+                '0', \
                 '${body.status}', \
                 '${body.timeCreated}')`;
+  console.log(query);
   executeQuery(res, query);
 });
 
-router.post("/eventUpdate", (req, res) => {
+router.put("/eventUpdate", (req, res) => {
   const body = req.body;
-  console.log("Payloa Updat");
+  console.log("Payload Update");
   const query = `UPDATE eventView SET operatorCode = ${body.operator}, \
                     status = ${body.status} where eventId = ${body.eventId}`;
   executeQuery(res, query);
