@@ -69,6 +69,16 @@ router.get("/zone", (req, res) => {
   executeQuery(res, query);
 });
 
+router.get("/getEvent", (req, res) => {
+  const query =
+    "SELECT eventId,d.machine + '_' + m.model as Name,r.request,operatorCode,status,created,stoped,usedTime \
+                  from event e \
+                      inner join model m on m.id = e.modelId \
+                        inner join machine d on m.machineId = d.machineId \
+                         inner join request r on r.requestId = e.requestId";
+  executeQuery(res, query);
+});
+
 router.post("/event", (req, res) => {
   const body = req.body;
   console.log("Payload Post Event");
