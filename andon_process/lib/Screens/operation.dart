@@ -269,6 +269,7 @@ class _OperationState extends State<Operation> {
               appBar: PreferredSize(
                 preferredSize: Size.fromHeight(150.0),
                 child: AppBar(
+                  backgroundColor: Colors.indigoAccent,
                   automaticallyImplyLeading: false,
                   // flexibleSpace: Center(
                   //   child: Text(
