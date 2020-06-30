@@ -71,11 +71,12 @@ router.get("/zone", (req, res) => {
 
 router.get("/getEvent", (req, res) => {
   const query =
-    "SELECT eventId,d.machine + '_' + m.model as Name,r.request,operatorCode,status,created,stoped,usedTime \
+    "SELECT eventId,d.machine + '_' + m.model as name,r.request,operatorCode,status,created,stoped,usedTime,z.zone \
                   from event e \
                       inner join model m on m.id = e.modelId \
                         inner join machine d on m.machineId = d.machineId \
-                         inner join request r on r.requestId = e.requestId";
+                         inner join request r on r.requestId = e.requestId \
+                          inner join zone z on z.machineId = m.machineId";
   executeQuery(res, query);
 });
 
@@ -97,8 +98,11 @@ router.post("/event", (req, res) => {
 router.put("/eventUpdate", (req, res) => {
   const body = req.body;
   console.log("Payload Update");
-  const query = `UPDATE eventView SET operatorCode = ${body.operator}, \
-                    status = ${body.status} where eventId = ${body.eventId}`;
+  const query = `UPDATE eventView SET operatorCode = '${body.operator}', \
+                    usedTime = '${body.elspedTime}' \
+                      stoped = '${body.stoped}' \
+                        status = '${body.status}' \ 
+                          where eventId = ${body.eventId}`;
   executeQuery(res, query);
 });
 

@@ -6,7 +6,7 @@ import 'package:andon/Constants.dart' as con;
 import 'package:http/http.dart' as http;
 
 ThunkAction<EventProcess> getEventAction() => (Store store) async {
-      final response = await http.get(con.baseUrl + "/api/process/");
+      final response = await http.get(con.baseUrl + "/api/machine/getEvent");
 
       if (response.statusCode == 200) {
         // If the server did return a 200 OK response,
@@ -27,7 +27,7 @@ ThunkAction<EventProcess> getEventAction() => (Store store) async {
     };
 
 ThunkAction<CategoryModel> getCategoryAction() => (Store store) async {
-      final response = await http.get(con.baseUrl + '/api/category/');
+      final response = await http.get(con.baseUrl + '/api/machine/zone');
 
       if (response.statusCode == 200) {
         // If the server did return a 200 OK response,
@@ -41,13 +41,14 @@ ThunkAction<CategoryModel> getCategoryAction() => (Store store) async {
 
         store.dispatch(
             UpdateAction(type: ActionType.CategoryAPI, message: payload));
+
+        print(payload);
       } else {
         throw Exception('Failed to load');
       }
     };
 
-ThunkAction<EventProcess> getSocketAction(List data) =>
-    (Store store) async {
+ThunkAction<EventProcess> getSocketAction(List data) => (Store store) async {
       // then parse the JSON.
       print(data);
       List<EventProcess> payload = [];

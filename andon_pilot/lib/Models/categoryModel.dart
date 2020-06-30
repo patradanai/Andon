@@ -1,13 +1,11 @@
 class CategoryModel {
-  int id;
   String machine;
   String zone;
 
-  CategoryModel({this.id, this.machine, this.zone});
+  CategoryModel({this.machine, this.zone});
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) {
-    return CategoryModel(
-        id: json['id'], machine: json['processName'], zone: json['zoneName']);
+    return CategoryModel(machine: json['machine'], zone: json['zone']);
   }
 }
 
@@ -20,6 +18,7 @@ class EventProcess {
   String zone;
   String operatorCode;
   String timecreated;
+
   EventProcess(
       {this.id,
       this.machine,
@@ -32,14 +31,14 @@ class EventProcess {
 
   factory EventProcess.fromJson(Map<String, dynamic> json) {
     return EventProcess(
-      id: json['id'],
-      machine: json['machine'],
-      operation: json['operation'],
-      date: json['timedate'],
-      process: json['process'],
+      id: json['eventId'],
+      machine: json['name'],
+      operation: json['request'],
+      date: json['created'],
+      process: json['status'],
       zone: json['zoneName'],
-      operatorCode: json['operator'],
-      timecreated: json['timecreated'],
+      operatorCode: json['operatorCode'],
+      timecreated: json['created'],
     );
   }
 }
