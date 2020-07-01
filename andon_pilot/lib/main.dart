@@ -82,7 +82,7 @@ class _MyAppState extends State<MyApp> {
     initializeNotification();
     initIsolate();
 
-    AndroidAlarmManager.periodic(Duration(seconds: 10), 0, isolateFunction);
+    AndroidAlarmManager.periodic(Duration(seconds: 60), 0, isolateFunction);
 
     // Listening  message from isolate
     port.listen((message) {

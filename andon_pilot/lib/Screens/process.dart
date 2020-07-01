@@ -14,7 +14,7 @@ import 'package:flutter_redux/flutter_redux.dart';
 import 'package:andon/Stores/viewModel.dart';
 import 'package:redux/redux.dart';
 
-const baseUrl = con.baseUrl + '/api/process/';
+const baseUrl = con.baseUrl;
 
 class Process extends StatefulWidget {
   static String routeName = 'process';
@@ -48,18 +48,27 @@ class _ProcessState extends State<Process> {
     }
   }
 
-  Future fetchUpdate(String id, String process, String operatorCode) async {
+  Future fetchUpdate(String id, String process, String operatorCode,
+      bool dateStop, bool rev, String elasp) async {
     final response = await http.put(
-      baseUrl + "update",
+      baseUrl + "/api/machine/eventUpdate",
       headers: {'Content-Type': 'application/json'},
       body: json.encode(
         <String, dynamic>{
-          "id": id.toString(),
-          "process": process.toString(),
+          "eventId": id.toString(),
+          "status": process.toString(),
           "operator": operatorCode.toString(),
-          "timecreated": DateFormat.yMd().add_jm().format(
-                DateTime.now(),
-              )
+          "usedTime": elasp.toString(),
+          "recieved": rev == true
+              ? DateFormat.yMd().add_jm().format(
+                    DateTime.now(),
+                  )
+              : "0000-00-00 00:00:00.000",
+          "stoped": dateStop == true
+              ? DateFormat.yMd().add_jm().format(
+                    DateTime.now(),
+                  )
+              : "0000-00-00 00:00:00.000"
         },
       ),
       encoding: Encoding.getByName('utf-8'),
@@ -72,32 +81,32 @@ class _ProcessState extends State<Process> {
     }
   }
 
-  Future fetchInsert(String timestart, String machine, String operation,
-      String operatorCode, String elasp, String timecreated) async {
-    final response = await http.post(
-      baseUrl + "insert",
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(
-        <String, dynamic>{
-          "timestart": timestart.toString(),
-          "machine": machine.toString(),
-          "operation": operation.toString(),
-          "operator": operatorCode.toString(),
-          "elasp": elasp.toString(),
-          "timecreated": timecreated.toString(),
-          "timedone": DateFormat.yMd().add_jm().format(
-                DateTime.now(),
-              )
-        },
-      ),
-      encoding: Encoding.getByName('utf-8'),
-    );
+  // Future fetchInsert(String timestart, String machine, String operation,
+  //     String operatorCode, String elasp, String timecreated) async {
+  //   final response = await http.post(
+  //     baseUrl + "insert",
+  //     headers: {'Content-Type': 'application/json'},
+  //     body: json.encode(
+  //       <String, dynamic>{
+  //         "timestart": timestart.toString(),
+  //         "machine": machine.toString(),
+  //         "operation": operation.toString(),
+  //         "operator": operatorCode.toString(),
+  //         "elasp": elasp.toString(),
+  //         "timecreated": timecreated.toString(),
+  //         "timedone": DateFormat.yMd().add_jm().format(
+  //               DateTime.now(),
+  //             )
+  //       },
+  //     ),
+  //     encoding: Encoding.getByName('utf-8'),
+  //   );
 
-    if (response.statusCode == 200) {
-    } else {
-      throw Exception('Failed to load');
-    }
-  }
+  //   if (response.statusCode == 200) {
+  //   } else {
+  //     throw Exception('Failed to load');
+  //   }
+  // }
 
   // Update timestamps and datetime.now()
   void _diffTime() {
@@ -264,20 +273,20 @@ class _ProcessState extends State<Process> {
                 color: Colors.grey[300],
                 child: myData.length == 0
                     ? Center(
-                      child: Text(
-                        "Waiting Queue",
-                        style: TextStyle(
-                          fontSize: 30,
+                        child: Text(
+                          "Waiting Queue",
+                          style: TextStyle(
+                            fontSize: 30,
+                          ),
                         ),
-                      ),
-                    )
+                      )
                     : ListView.builder(
                         itemCount: myData.length,
                         itemBuilder: (context, index) {
                           return CardProcess(
                             pressButton: () {
-                              // scan();
                               if (myData[index].process == "Processing") {
+                                print("started Scan");
                                 _dialogEndJob(
                                   () async {
                                     Navigator.pop(context);
@@ -286,20 +295,25 @@ class _ProcessState extends State<Process> {
                                     await scan();
                                     if (_stateQrCode && barcode != "") {
                                       // Insert Data to Database
-                                      await fetchInsert(
-                                          myData[index].date,
-                                          myData[index].machine,
-                                          myData[index].operation,
-                                          myData[index].operatorCode,
-                                          _timestart[myData[index].machine],
-                                          myData[index].timecreated);
+                                      // await fetchInsert(
+                                      //     myData[index].date,
+                                      //     myData[index].machine,
+                                      //     myData[index].operation,
+                                      //     myData[index].operatorCode,
+                                      //     _timestart[myData[index].machine],
+                                      //     myData[index].timecreated);
                                       // Update Status
                                       await fetchUpdate(
-                                          myData[index].id.toString(),
-                                          "Done",
-                                          barcode);
+                                        myData[index].id.toString(),
+                                        "Done",
+                                        barcode,
+                                        true,
+                                        false,
+                                        _timestart[myData[index].machine],
+                                      );
                                       // Refresh all Data
-                                      await model.store.dispatch(getEventAction());
+                                      await model.store
+                                          .dispatch(getEventAction());
                                       // Pull data and Filter
                                       await fetchProcess(model.store.state);
                                       _diffTime();
@@ -314,7 +328,8 @@ class _ProcessState extends State<Process> {
                                     Navigator.pop(context);
                                   },
                                 );
-                              } else if (myData[index].process == "Wait") {
+                              } else if (myData[index].process == "Waiting") {
+                                print("started Scan");
                                 _dialogGetJob(
                                   () async {
                                     Navigator.pop(context);
@@ -325,11 +340,16 @@ class _ProcessState extends State<Process> {
                                     if (_stateQrCode && barcode != "") {
                                       // Update Data to Database
                                       await fetchUpdate(
-                                          myData[index].id.toString(),
-                                          "Processing",
-                                          barcode);
+                                        myData[index].id.toString(),
+                                        "Processing",
+                                        barcode,
+                                        false,
+                                        true,
+                                        _timestart[myData[index].machine],
+                                      );
                                       // Refresh all Data
-                                      await model.store.dispatch(getEventAction());
+                                      await model.store
+                                          .dispatch(getEventAction());
                                       // Pull data and Filter
                                       await fetchProcess(model.store.state);
                                       _diffTime();

@@ -8,10 +8,7 @@ import 'package:andon/Models/categoryModel.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 import 'package:andon/Stores/viewModel.dart';
 import 'package:andon/Stores/action.dart';
-import 'package:redux_dev_tools/redux_dev_tools.dart';
 import 'package:andon/Constants.dart';
-// Notigication
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class CategoryMenu extends StatefulWidget {
   static String routeName = 'category';
@@ -70,8 +67,6 @@ class _CategoryMenuState extends State<CategoryMenu> {
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
-    final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
-        new GlobalKey<RefreshIndicatorState>();
 
     return StoreConnector<AppState, ModelView>(
       converter: (store) {
