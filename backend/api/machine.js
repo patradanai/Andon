@@ -92,12 +92,26 @@ router.post("/event", (req, res) => {
 router.put("/eventUpdate", (req, res) => {
   const body = req.body;
   console.log("Payload Update");
+
+  const query = `UPDATE modelView SET operatorCode = '${body.operator}', \
+      recieved = '${body.recieved}', \
+        status = '${body.status}' \ 
+            where eventId = ${body.eventId}`;
+  console.log(query);
+  executeQuery(res, query);
+});
+
+router.put("/eventUpdateEnd", (req, res) => {
+  const body = req.body;
+  console.log("Payload Update");
+
   const query = `UPDATE modelView SET operatorCode = '${body.operator}', \
                     usedTime = '${body.elspedTime}', \
                       stoped = '${body.stoped}', \
                         status = '${body.status}', \ 
                           recieved = '${body.recieved}' \
                             where eventId = ${body.eventId}`;
+  console.log(query);
   executeQuery(res, query);
 });
 

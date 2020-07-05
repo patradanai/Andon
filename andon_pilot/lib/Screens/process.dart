@@ -58,17 +58,35 @@ class _ProcessState extends State<Process> {
           "eventId": id.toString(),
           "status": process.toString(),
           "operator": operatorCode.toString(),
+          "recieved": DateFormat.yMd().add_jm().format(
+                DateTime.now(),
+              )
+        },
+      ),
+      encoding: Encoding.getByName('utf-8'),
+    );
+
+    if (response.statusCode == 200) {
+      print("Completed Update");
+    } else {
+      throw Exception('Failed to load');
+    }
+  }
+
+  Future fetchUpdateEnd(String id, String process, String operatorCode,
+      bool dateStop, bool rev, String elasp) async {
+    final response = await http.put(
+      baseUrl + "/api/machine/eventUpdate",
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(
+        <String, dynamic>{
+          "eventId": id.toString(),
+          "status": process.toString(),
+          "operator": operatorCode.toString(),
           "usedTime": elasp.toString(),
-          "recieved": rev == true
-              ? DateFormat.yMd().add_jm().format(
-                    DateTime.now(),
-                  )
-              : "0000-00-00 00:00:00.000",
-          "stoped": dateStop == true
-              ? DateFormat.yMd().add_jm().format(
-                    DateTime.now(),
-                  )
-              : "0000-00-00 00:00:00.000"
+          "stoped": DateFormat.yMd().add_jm().format(
+                DateTime.now(),
+              )
         },
       ),
       encoding: Encoding.getByName('utf-8'),
@@ -303,7 +321,7 @@ class _ProcessState extends State<Process> {
                                       //     _timestart[myData[index].machine],
                                       //     myData[index].timecreated);
                                       // Update Status
-                                      await fetchUpdate(
+                                      await fetchUpdateEnd(
                                         myData[index].id.toString(),
                                         "Done",
                                         barcode,
